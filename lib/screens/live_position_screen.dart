@@ -1,104 +1,70 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+// IMPORTANTE: Pon la ruta correcta hacia tu nuevo servicio
+import 'package:tfg/services/services.dart';
 
 class LivePositionScreen extends StatefulWidget {
   const LivePositionScreen({Key? key}) : super(key: key);
 
   @override
-  _LivePositionScreenState createState() => _LivePositionScreenState();
+  State<LivePositionScreen> createState() => _LivePositionScreenState();
 }
 
 class _LivePositionScreenState extends State<LivePositionScreen> {
-  Position? _currentPosition;
-  Placemark? _currentPlace;
-  StreamSubscription<Position>? _positionStreamSubscription;
-  String _statusMessage = 'Inicializando...';
-
   @override
   void initState() {
     super.initState();
-    _initLocationUpdates();
-  }
-
-  @override
-  void dispose() {
-    _positionStreamSubscription?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _initLocationUpdates() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      setState(() => _statusMessage = 'El servicio de ubicación está desactivado.');
-      return;
-    }
-
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        setState(() => _statusMessage = 'Permiso de ubicación denegado.');
-        return;
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      setState(() => _statusMessage = 'Permiso de ubicación denegado permanentemente.');
-      return;
-    }
-
-    const LocationSettings locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.bestForNavigation,
-      distanceFilter: 0,
-    );
-
-    _positionStreamSubscription = Geolocator.getPositionStream(
-      locationSettings: locationSettings,
-    ).listen((Position position) async {
-      List<Placemark> placemarks = await placemarkFromCoordinates(
-        position.latitude,
-        position.longitude,
-      );
-
-      setState(() {
-        _currentPosition = position;
-        _currentPlace = placemarks.first;
-        _statusMessage = 'Ubicación actualizada';
-      });
-    });
+    // Arrancamos el tracking al entrar en la pantalla
+    LocationService.instance.startTracking();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade200,
-        body: _currentPosition == null || _currentPlace == null
-            ? Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: 16),
-              Text(_statusMessage, style: const TextStyle(fontSize: 16)),
-            ],
-          ),
-        ) : SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: InfoSection.values.map(
-                  (section) => Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: section.buildCard(_currentPosition, _currentPlace),
+      // ListenableBuilder escucha al ChangeNotifier y se redibuja solo
+      body: ListenableBuilder(
+        listenable: LocationService.instance,
+        builder: (context, child) {
+          final pos = LocationService.instance.currentPosition;
+          final place = LocationService.instance.currentPlace;
+          final status = LocationService.instance.statusMessage;
+
+          if (pos == null || place == null) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text(status, style: const TextStyle(fontSize: 16)),
+                ],
               ),
-            ).toList(),
-          ),
-        )
+            );
+          }
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: InfoSection.values.map(
+                    (section) => Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: section.buildCard(pos, place),
+                ),
+              ).toList(),
+            ),
+          );
+        },
+      ),
     );
   }
-
 }
+
+// ==========================================
+// SECCIÓN VISUAL (Sin cambios)
+// ==========================================
+
 enum InfoSection {
   coordinates(
     title: "Coordenadas",
@@ -114,8 +80,6 @@ enum InfoSection {
 
   final String title;
   final IconData icon;
-
-  /// Método que genera los rows dinámicamente
   final List<Widget> Function(Position?, Placemark?) fieldsBuilder;
 
   const InfoSection({
@@ -124,7 +88,6 @@ enum InfoSection {
     required this.fieldsBuilder,
   });
 
-  /// Método para construir la tarjeta completa
   Widget buildCard(Position? pos, Placemark? place) {
     return Card(
       elevation: 4,
@@ -168,9 +131,8 @@ List<Widget> _buildCoordinateFields(Position? pos, Placemark? place) {
 List<Widget> _buildAddressFields(Position? pos, Placemark? place) {
   return [
     _row("País", place?.country),
-    _row("Provincia", place?.administrativeArea),
+    _row("Comunidad Autónoma", place?.administrativeArea),
     _row("Ciudad", place?.locality),
-    _row("Barrio", place?.subLocality),
     _row("Calle", place?.street),
     _row("Edificio", place?.name),
     _row("Código postal", place?.postalCode),
