@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-// IMPORTANTE: Pon la ruta correcta hacia tu nuevo servicio
 import 'package:tfg/services/services.dart';
 
 class LivePositionScreen extends StatefulWidget {
@@ -44,6 +43,9 @@ class _LivePositionScreenState extends State<LivePositionScreen> {
             );
           }
 
+          // Actualizamos el recinto y olivos en el DatabaseService cada vez que cambia la posición
+          _updateDatabaseContext(pos.latitude, pos.longitude);
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -58,6 +60,10 @@ class _LivePositionScreenState extends State<LivePositionScreen> {
         },
       ),
     );
+  }
+
+  void _updateDatabaseContext(double lat, double lng) {
+    DatabaseService.instance.getEnclosureByCoordinates(lat, lng);
   }
 }
 

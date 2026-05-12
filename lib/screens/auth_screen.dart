@@ -14,27 +14,27 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _nombreController = TextEditingController();
+  final _nameController = TextEditingController();
 
   bool _isLoading = false;
   bool _isLogin = true;
-  String _rolSeleccionado = 'agricultor';
+  String _selectedRole = 'agricultor';
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _nombreController.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
   // --- MIRA CÓMO QUEDA AHORA ESTA FUNCIÓN ---
-  Future<void> _autenticar() async {
+  Future<void> _authenticate() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      _mostrarMensaje('Por favor, rellena todos los campos', isError: true);
+      _showMessage('Por favor, rellena todos los campos', isError: true);
       return;
     }
 
@@ -45,9 +45,9 @@ class _AuthScreenState extends State<AuthScreen> {
         // Delegamos el inicio de sesión al Singleton
         await AuthService.instance.signIn(email: email, password: password);
       } else {
-        final nombre = _nombreController.text.trim();
-        if (nombre.isEmpty) {
-          _mostrarMensaje('Por favor, introduce tu nombre de usuario', isError: true);
+        final name = _nameController.text.trim();
+        if (name.isEmpty) {
+          _showMessage('Por favor, introduce tu nombre de usuario', isError: true);
           setState(() => _isLoading = false);
           return;
         }
@@ -56,8 +56,8 @@ class _AuthScreenState extends State<AuthScreen> {
         await AuthService.instance.signUp(
           email: email,
           password: password,
-          nombre: nombre,
-          rol: _rolSeleccionado,
+          name: name,
+          role: _selectedRole,
         );
       }
 
@@ -71,9 +71,9 @@ class _AuthScreenState extends State<AuthScreen> {
       }
 
     } on AuthException catch (error) {
-      _mostrarMensaje(error.message, isError: true);
+      _showMessage(error.message, isError: true);
     } catch (error) {
-      _mostrarMensaje('Error: $error', isError: true);
+      _showMessage('Error: $error', isError: true);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -81,10 +81,10 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  void _mostrarMensaje(String mensaje, {bool isError = false}) {
+  void _showMessage(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(mensaje),
+        content: Text(message),
         backgroundColor: isError ? Colors.red : Colors.green.shade700,
       ),
     );
@@ -149,7 +149,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
               if (!_isLogin) ...[
                 TextField(
-                  controller: _nombreController,
+                  controller: _nameController,
                   decoration: InputDecoration(
                     labelText: 'Nombre y Apellidos',
                     prefixIcon: const Icon(Icons.person_outline),
@@ -158,7 +158,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 20),
                 DropdownButtonFormField<String>(
-                  value: _rolSeleccionado,
+                  initialValue: _selectedRole,
                   decoration: InputDecoration(
                     labelText: 'Selecciona tu perfil',
                     prefixIcon: const Icon(Icons.badge_outlined),
@@ -169,7 +169,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     DropdownMenuItem(value: 'tecnico', child: Text('Técnico Agrícola')),
                   ],
                   onChanged: (String? newValue) {
-                    if (newValue != null) setState(() => _rolSeleccionado = newValue);
+                    if (newValue != null) setState(() => _selectedRole = newValue);
                   },
                 ),
                 const SizedBox(height: 20),
@@ -184,7 +184,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                   ),
-                  onPressed: _isLoading ? null : _autenticar,
+                  onPressed: _isLoading ? null : _authenticate,
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
@@ -202,7 +202,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       _isLogin = !_isLogin;
                       _emailController.clear();
                       _passwordController.clear();
-                      _nombreController.clear();
+                      _nameController.clear();
                     });
                   },
                   child: Text(

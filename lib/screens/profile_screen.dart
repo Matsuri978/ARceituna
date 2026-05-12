@@ -3,48 +3,48 @@ import 'package:flutter/material.dart';
 import 'package:tfg/services/services.dart';
 import 'package:tfg/screens/screens.dart';
 
-class PerfilScreen extends StatefulWidget {
-  const PerfilScreen({super.key});
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
 
   @override
-  State<PerfilScreen> createState() => _PerfilScreenState();
+  State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _PerfilScreenState extends State<PerfilScreen> {
+class _ProfileScreenState extends State<ProfileScreen> {
   final _user = AuthService.instance.currentUser;
 
-  String? _rol;
+  String? _role;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _cargarDatosPerfil();
+    _loadProfileData();
   }
 
-  Future<void> _cargarDatosPerfil() async {
+  Future<void> _loadProfileData() async {
     if (_user != null) {
-      final rolObtenido = await AuthService.instance.obtenerRol(_user!.id);
+      final roleObtained = await AuthService.instance.getRole(_user.id);
       if (mounted) {
         setState(() {
-          _rol = rolObtenido;
+          _role = roleObtained;
           _isLoading = false;
         });
       }
     } else {
       setState(() {
-        _rol = 'invitado';
+        _role = 'guest';
         _isLoading = false;
       });
     }
   }
 
-  Future<void> _cerrarSesion(bool esInvitado) async {
-    final confirmar = await showDialog<bool>(
+  Future<void> _signOut(bool isGuest) async {
+    final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(esInvitado ? 'Salir' : 'Cerrar Sesión'),
-        content: Text(esInvitado
+        title: Text(isGuest ? 'Salir' : 'Cerrar Sesión'),
+        content: Text(isGuest
             ? '¿Quieres volver a la pantalla de inicio?'
             : '¿Estás seguro de que quieres salir?'),
         actions: [
@@ -61,8 +61,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
       ),
     );
 
-    if (confirmar == true) {
-      if (!esInvitado) {
+    if (confirm == true) {
+      if (!isGuest) {
         await AuthService.instance.signOut();
       }
 
@@ -78,7 +78,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool esInvitado = _user == null;
+    final bool isGuest = _user == null;
 
     return Scaffold(
       appBar: AppBar(
@@ -104,18 +104,18 @@ class _PerfilScreenState extends State<PerfilScreen> {
             const SizedBox(height: 20),
 
             _buildInfoCard(
-              titulo: 'Nombre',
-              valor: esInvitado ? 'Invitado' : (_user!.userMetadata?['display_name'] ?? 'Usuario'),
+              title: 'Nombre',
+              value: isGuest ? 'Invitado' : (_user.userMetadata?['display_name'] ?? 'Usuario'),
               icon: Icons.badge_outlined,
             ),
             _buildInfoCard(
-              titulo: 'Correo Electrónico',
-              valor: esInvitado ? 'N/A' : _user!.email ?? 'Sin email',
+              title: 'Correo Electrónico',
+              value: isGuest ? 'N/A' : _user.email ?? 'Sin email',
               icon: Icons.email_outlined,
             ),
             _buildInfoCard(
-              titulo: 'Rol en el sistema',
-              valor: _rol != null ? _rol![0].toUpperCase() + _rol!.substring(1) : 'Cargando...',
+              title: 'Rol en el sistema',
+              value: _role != null ? _role![0].toUpperCase() + _role!.substring(1) : 'Cargando...',
               icon: Icons.settings_accessibility,
             ),
 
@@ -128,20 +128,20 @@ class _PerfilScreenState extends State<PerfilScreen> {
             const SizedBox(height: 10),
 
 
-            ...AuthService.instance.obtenerPermisos(_rol ?? 'invitado').entries.map((entrada) {
+            ...AuthService.instance.getPermissions(_role ?? 'guest').entries.map((entry) {
               return ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: Icon(
-                  entrada.value ? Icons.check_circle : Icons.cancel,
-                  color: entrada.value ? Colors.green : Colors.red,
+                  entry.value ? Icons.check_circle : Icons.cancel,
+                  color: entry.value ? Colors.green : Colors.red,
                   size: 28,
                 ),
                 title: Text(
-                  entrada.key,
+                  entry.key,
                   style: TextStyle(
                     fontSize: 16,
-                    color: entrada.value ? Colors.black87 : Colors.grey,
-                    decoration: entrada.value ? TextDecoration.none : TextDecoration.lineThrough,
+                    color: entry.value ? Colors.black87 : Colors.grey,
+                    decoration: entry.value ? TextDecoration.none : TextDecoration.lineThrough,
                   ),
                 ),
               );
@@ -153,10 +153,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
               width: double.infinity,
               height: 55,
               child: ElevatedButton.icon(
-                onPressed: () => _cerrarSesion(esInvitado),
-                icon: Icon(esInvitado ? Icons.login : Icons.logout),
+                onPressed: () => _signOut(isGuest),
+                icon: Icon(isGuest ? Icons.login : Icons.logout),
                 label: Text(
-                  esInvitado ? 'Salir' : 'Cerrar Sesión',
+                  isGuest ? 'Salir' : 'Cerrar Sesión',
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -172,15 +172,15 @@ class _PerfilScreenState extends State<PerfilScreen> {
     );
   }
 
-  Widget _buildInfoCard({required String titulo, required String valor, required IconData icon}) {
+  Widget _buildInfoCard({required String title, required String value, required IconData icon}) {
     return Card(
       margin: const EdgeInsets.only(bottom: 15),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       elevation: 2,
       child: ListTile(
         leading: Icon(icon, color: Colors.green.shade700),
-        title: Text(titulo, style: const TextStyle(fontSize: 14, color: Colors.grey)),
-        subtitle: Text(valor, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87)),
+        title: Text(title, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+        subtitle: Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87)),
       ),
     );
   }

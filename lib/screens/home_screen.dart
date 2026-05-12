@@ -2,36 +2,36 @@ import 'package:flutter/material.dart';
 
 import 'package:tfg/screens/screens.dart';
 
-enum OpcionMenu {
-  perfil(
-    tituloMenu: 'Perfil',
-    tituloAppBar: 'Perfil',
-    icono: Icons.person,
-    pantalla: PerfilScreen(), // Ahora es una sección más
+enum MenuOption {
+  profile(
+    menuTitle: 'Perfil',
+    appBarTitle: 'Perfil',
+    icon: Icons.person,
+    screen: ProfileScreen(), // Ahora es una sección más
   ),
-  inicio(
-    tituloMenu: 'Inicio',
-    tituloAppBar: 'Ubicación en tiempo real',
-    icono: Icons.location_on_outlined,
-    pantalla: LivePositionScreen(),
+  home(
+    menuTitle: 'Inicio',
+    appBarTitle: 'Ubicación en tiempo real',
+    icon: Icons.location_on_outlined,
+    screen: LivePositionScreen(),
   ),
-  escanerAR(
-    tituloMenu: 'Escáner AR',
-    tituloAppBar: 'Escáner de Realidad Aumentada',
-    icono: Icons.qr_code_scanner,
-    pantalla: ARScreen(),
+  arScanner(
+    menuTitle: 'Escáner AR',
+    appBarTitle: 'Escáner de Realidad Aumentada',
+    icon: Icons.qr_code_scanner,
+    screen: ARScreen(),
   );
 
-  final String tituloMenu;
-  final String tituloAppBar;
-  final IconData icono;
-  final Widget pantalla;
+  final String menuTitle;
+  final String appBarTitle;
+  final IconData icon;
+  final Widget screen;
 
-  const OpcionMenu({
-    required this.tituloMenu,
-    required this.tituloAppBar,
-    required this.icono,
-    required this.pantalla,
+  const MenuOption({
+    required this.menuTitle,
+    required this.appBarTitle,
+    required this.icon,
+    required this.screen,
   });
 }
 
@@ -43,12 +43,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // 2. Controlamos el estado directamente con el enum en lugar de un número
-  OpcionMenu _opcionActual = OpcionMenu.inicio;
+  // Controlamos el estado directamente con el enum en lugar de un número
+  MenuOption _currentOption = MenuOption.home;
 
-  void _cambiarPantalla(OpcionMenu opcion) {
+  void _changeScreen(MenuOption option) {
     setState(() {
-      _opcionActual = opcion;
+      _currentOption = option;
     });
     // Cerramos el menú lateral al seleccionar una opción
     Navigator.pop(context);
@@ -63,8 +63,8 @@ class _HomeScreenState extends State<HomeScreen> {
         centerTitle: false,
 
         title: Text(
-          _opcionActual.tituloAppBar,
-          style: TextStyle(
+          _currentOption.appBarTitle,
+          style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -76,12 +76,12 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             InkWell(
-              onTap: () => _cambiarPantalla(OpcionMenu.perfil),
+              onTap: () => _changeScreen(MenuOption.profile),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.only(top: 60, bottom: 30, left: 20),
                 decoration: BoxDecoration(
-                  color: _opcionActual == OpcionMenu.perfil ? Colors.green.shade100 : Colors.green.shade50,
+                  color: _currentOption == MenuOption.profile ? Colors.green.shade100 : Colors.green.shade50,
                   border: Border(bottom: BorderSide(color: Colors.green.shade200)),
                 ),
                 child: Row(
@@ -107,20 +107,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 10),
 
-            ...OpcionMenu.values.where((opcion) => opcion != OpcionMenu.perfil).map((opcion) {
+            ...MenuOption.values.where((option) => option != MenuOption.profile).map((option) {
               return ListTile(
-                leading: Icon(opcion.icono, size: 30, color: Colors.black87),
-                title: Text(opcion.tituloMenu, style: const TextStyle(fontSize: 18)),
-                selected: _opcionActual == opcion,
+                leading: Icon(option.icon, size: 30, color: Colors.black87),
+                title: Text(option.menuTitle, style: const TextStyle(fontSize: 18)),
+                selected: _currentOption == option,
                 selectedTileColor: Colors.green.shade100,
-                onTap: () => _cambiarPantalla(opcion),
+                onTap: () => _changeScreen(option),
               );
             }),
           ],
         ),
       ),
-      // 4. Mostramos la pantalla leyendo directamente el widget guardado en el enum
-      body: _opcionActual.pantalla,
+      // Mostramos la pantalla leyendo directamente el widget guardado en el enum
+      body: _currentOption.screen,
     );
   }
 }

@@ -4,7 +4,7 @@ import 'package:tfg/screens/screens.dart';
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
-  void _continuarComoInvitado(BuildContext context) {
+  void _continueAsGuest(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -112,7 +112,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   icon: const Icon(Icons.explore),
                   label: const Text('Continuar como Invitado', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  onPressed: () => _continuarComoInvitado(context),
+                  onPressed: () => _continueAsGuest(context),
                 ),
               ),
 

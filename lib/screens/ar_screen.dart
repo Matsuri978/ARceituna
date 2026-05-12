@@ -6,11 +6,11 @@ import 'package:ar_flutter_plugin_2/managers/ar_session_manager.dart';
 import 'package:ar_flutter_plugin_2/managers/ar_object_manager.dart';
 import 'package:geolocator/geolocator.dart';
 
-import '../olivo_service.dart';
-import '../olivo_model.dart';
+import 'package:tfg/services/services.dart';
+import 'package:tfg/models/models.dart';
 
 class ARScreen extends StatefulWidget {
-  const ARScreen({Key? key}) : super(key: key);
+  const ARScreen({super.key});
 
   @override
   State<ARScreen> createState() => _ARScreenState();
@@ -23,8 +23,7 @@ class _ARScreenState extends State<ARScreen> {
   bool showInfoCard = false;
   bool planeFound = false;
 
-  final OlivoService _olivoService = OlivoService();
-  Olivo? _olivoSeleccionado;
+  Olive? _selectedOlive;
 
   @override
   void dispose() {
@@ -36,7 +35,7 @@ class _ARScreenState extends State<ARScreen> {
     setState(() {
       showInfoCard = false;
       planeFound = false;
-      _olivoSeleccionado = null;
+      _selectedOlive = null;
     });
   }
 
@@ -78,49 +77,64 @@ class _ARScreenState extends State<ARScreen> {
     arSessionManager!.onPlaneDetected = (plane) async {
       if (planeFound) return;
 
-      try{
+      try {
         Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.best);
 
-        Olivo? olivoEncontrado = _olivoService.obtenerOlivoMasCercano(position);
+        // Buscamos el olivo más cercano de los cargados en el servicio
+        Olive? oliveFound = _getClosestOlive(position);
 
-        if (olivoEncontrado != null){
+        if (oliveFound != null) {
           setState(() {
             planeFound = true;
-            _olivoSeleccionado = olivoEncontrado;
+            _selectedOlive = oliveFound;
             showInfoCard = true;
           });
         }
       } catch (e) {
         debugPrint("Error obteniendo GPS: $e");
       }
-
     };
   }
 
+  Olive? _getClosestOlive(Position currentPos) {
+    final olives = DatabaseService.instance.olives;
+    if (olives.isEmpty) return null;
+
+    Olive? closest;
+    double minDistance = 10.0; // metros
+
+    for (var olive in olives) {
+      double distance = Geolocator.distanceBetween(
+        currentPos.latitude,
+        currentPos.longitude,
+        olive.latitude,
+        olive.longitude,
+      );
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        closest = olive;
+      }
+    }
+    return closest;
+  }
 
   Widget viewCard() {
-    if (showInfoCard && _olivoSeleccionado != null) {
-
-      bool esCritico = _olivoSeleccionado!.tienePlaga || _olivoSeleccionado!.humedadSuelo < 0.15;
-      Color colorEstado = esCritico ? Colors.red : Colors.green;
-      String textoEstado = esCritico ? "ATENCIÓN REQUERIDA" : "ESTADO ÓPTIMO";
-
-
-      String fechaTexto = "Sin datos";
-      if (_olivoSeleccionado!.ultimaFechaTratamiento != null) {
-        DateTime f = _olivoSeleccionado!.ultimaFechaTratamiento!;
-        fechaTexto = "${f.day}/${f.month}/${f.year}";
-      }
+    if (showInfoCard && _selectedOlive != null) {
+      // De momento usamos lógica simple para el estado crítico
+      bool isCritical = _selectedOlive!.healthStatus == 'Enfermo';
+      Color statusColor = isCritical ? Colors.red : Colors.green;
+      String statusText = isCritical ? "ATENCIÓN REQUERIDA" : "ESTADO ÓPTIMO";
 
       return Positioned(
         bottom: 30, left: 20, right: 20,
         child: Card(
           elevation: 10,
-          color: Colors.white.withOpacity(0.98),
+          color: Colors.white.withValues(alpha: 0.98),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: colorEstado, width: 2)
+              side: BorderSide(color: statusColor, width: 2)
           ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -133,31 +147,18 @@ class _ARScreenState extends State<ARScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Chip(
-                      backgroundColor: colorEstado.withOpacity(0.2),
-                      avatar: Icon(Icons.park, color: colorEstado),
-                      label: Text("${_olivoSeleccionado!.id}: $textoEstado", style: TextStyle(fontWeight: FontWeight.bold, color: colorEstado)),
+                      backgroundColor: statusColor.withValues(alpha: 0.2),
+                      avatar: Icon(Icons.park, color: statusColor),
+                      label: Text("${_selectedOlive!.id}: $statusText", 
+                        style: TextStyle(fontWeight: FontWeight.bold, color: statusColor)),
                     ),
                     CloseButton(onPressed: _resetUI),
                   ],
                 ),
                 const Divider(),
 
-                _buildRowInfo("Variedad:", _olivoSeleccionado!.variedad),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text("Humedad Suelo:", style: TextStyle(color: Colors.grey)),
-                    Text(
-                        "${(_olivoSeleccionado!.humedadSuelo * 100).toStringAsFixed(1)}%",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: _olivoSeleccionado!.humedadSuelo < 0.15 ? Colors.red : Colors.black
-                        )
-                    ),
-                  ],
-                ),
+                _buildRowInfo("Variedad:", _selectedOlive!.variety ?? "Desconocida"),
+                _buildRowInfo("Estado:", _selectedOlive!.healthStatus ?? "Normal"),
 
                 const SizedBox(height: 10),
 
@@ -174,22 +175,22 @@ class _ARScreenState extends State<ARScreen> {
                         children: const [
                           Icon(Icons.history, size: 16, color: Colors.blue),
                           SizedBox(width: 5),
-                          Text("Último Tratamiento:", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                          Text("Gestión de Olivo", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text("Tipo: ${_olivoSeleccionado!.ultimoTratamiento}"),
-                      Text("Fecha: $fechaTexto", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      const Text("Consulta el historial para ver tratamientos y observaciones."),
 
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 10),
 
                       SizedBox(
                         width: double.infinity,
-                        height: 30,
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.blue.shade300)),
-                          onPressed: () => _mostrarDialogoTratamiento(context),
-                          child: const Text("Añadir Nuevo Tratamiento", style: TextStyle(fontSize: 12)),
+                        height: 35,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade600),
+                          onPressed: () => _showHistoryDialog(context),
+                          icon: const Icon(Icons.list_alt, size: 18, color: Colors.white),
+                          label: const Text("Ver Historial", style: TextStyle(color: Colors.white)),
                         ),
                       )
                     ],
@@ -198,33 +199,13 @@ class _ARScreenState extends State<ARScreen> {
 
                 const SizedBox(height: 15),
 
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text("Registrar Plaga", style: TextStyle(fontWeight: FontWeight.bold)),
-                  value: _olivoSeleccionado!.tienePlaga,
-                  activeColor: Colors.red,
-                  onChanged: (bool valor) {
-                    setState(() {
-                      _olivoSeleccionado!.tienePlaga = valor;
-                      _olivoService.actualizarEstadoPlaga(_olivoSeleccionado!.id, valor);
-                    });
-                  },
-                ),
-
                 SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade600),
-                    icon: const Icon(Icons.water_drop, color: Colors.white),
-                    label: const Text("Registrar Riego Manual", style: TextStyle(color: Colors.white)),
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.add_circle_outline),
+                    label: const Text("Registrar Observación/Tratamiento"),
                     onPressed: () {
-                      setState(() {
-                        _olivoSeleccionado!.humedadSuelo = 1.0;
-                        _olivoService.actualizarEstadoHumedad(_olivoSeleccionado!.id, 1.0);
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('💧 Riego registrado'), backgroundColor: Colors.blue)
-                      );
+                      // Aquí iría la lógica para abrir un formulario de registro
                     },
                   ),
                 )
@@ -234,7 +215,7 @@ class _ARScreenState extends State<ARScreen> {
         ),
       );
     } else {
-      return _buildScanningMessage(); // Tu mensaje de búsqueda
+      return _buildScanningMessage();
     }
   }
 
@@ -264,53 +245,47 @@ class _ARScreenState extends State<ARScreen> {
     );
   }
 
-  void _mostrarDialogoTratamiento(BuildContext context) {
-    final TextEditingController _textController = TextEditingController();
-
+  void _showHistoryDialog(BuildContext context) {
+    // Diálogo para mostrar tratamientos y observaciones
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Nuevo Tratamiento"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text("Escribe el tipo de tratamiento aplicado hoy (ej: Cobre, Abono, Poda):"),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _textController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: "Tipo de tratamiento",
-                ),
-                autofocus: true,
-              ),
-            ],
+          title: Text("Historial Olivo ${_selectedOlive!.id}"),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: FutureBuilder(
+              future: Future.wait([
+                DatabaseService.instance.getTreatmentsByOlive(_selectedOlive!.id),
+                DatabaseService.instance.getObservationsByOlive(_selectedOlive!.id),
+              ]),
+              builder: (context, AsyncSnapshot<List<List<Map<String, dynamic>>>> snapshot) {
+                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                
+                final treatments = snapshot.data![0];
+                final observations = snapshot.data![1];
+
+                return ListView(
+                  shrinkWrap: true,
+                  children: [
+                    const Text("Tratamientos:", style: TextStyle(fontWeight: FontWeight.bold)),
+                    ...treatments.map((t) => ListTile(
+                      title: Text(t['producto'] ?? 'Tratamiento'),
+                      subtitle: Text(t['fecha_treatment'] ?? ''),
+                    )),
+                    const Divider(),
+                    const Text("Observaciones:", style: TextStyle(fontWeight: FontWeight.bold)),
+                    ...observations.map((o) => ListTile(
+                      title: Text(o['tipo_observacion'] ?? 'Obs'),
+                      subtitle: Text(o['descripcion'] ?? ''),
+                    )),
+                  ],
+                );
+              },
+            ),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context), // Cancelar
-              child: const Text("Cancelar"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (_textController.text.isNotEmpty) {
-                  setState(() {
-                    // Actualizamos la BBDD simulada
-                    _olivoService.registrarTratamiento(
-                        _olivoSeleccionado!.id,
-                        _textController.text
-                    );
-
-                    // Actualizamos el objeto local para verlo al instante
-                    _olivoSeleccionado!.ultimoTratamiento = _textController.text;
-                    _olivoSeleccionado!.ultimaFechaTratamiento = DateTime.now();
-                  });
-                  Navigator.pop(context); // Cerrar diálogo
-                }
-              },
-              child: const Text("Guardar"),
-            ),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cerrar")),
           ],
         );
       },
