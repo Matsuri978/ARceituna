@@ -11,10 +11,11 @@ class LivePositionScreen extends StatefulWidget {
 }
 
 class _LivePositionScreenState extends State<LivePositionScreen> {
+  String? _lastEnclosureId;
+
   @override
   void initState() {
     super.initState();
-    // Arrancamos el tracking al entrar en la pantalla
     LocationService.instance.startTracking();
   }
 
@@ -22,7 +23,6 @@ class _LivePositionScreenState extends State<LivePositionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade200,
-      // ListenableBuilder escucha al ChangeNotifier y se redibuja solo
       body: ListenableBuilder(
         listenable: LocationService.instance,
         builder: (context, child) {
@@ -43,7 +43,7 @@ class _LivePositionScreenState extends State<LivePositionScreen> {
             );
           }
 
-          // Actualizamos el recinto y olivos en el DatabaseService cada vez que cambia la posición
+          // Actualizamos la información de la base de datos de forma modular
           _updateDatabaseContext(pos.latitude, pos.longitude);
 
           return SingleChildScrollView(
@@ -62,14 +62,47 @@ class _LivePositionScreenState extends State<LivePositionScreen> {
     );
   }
 
-  void _updateDatabaseContext(double lat, double lng) {
-    DatabaseService.instance.getEnclosureByCoordinates(lat, lng);
+  /// Función que llama a las peticiones de base de datos de forma secuencial
+  Future<void> _updateDatabaseContext(double lat, double lng) async {
+    final db = DatabaseService.instance;
+
+    // 1. Buscamos el recinto
+    final enclosure = await db.fetchEnclosureByCoordinates(lat, lng);
+    
+    // Optimizamos: solo realizamos las peticiones extra si el recinto ha cambiado
+    if (enclosure != null) {
+      if (enclosure.id != _lastEnclosureId) {
+        _lastEnclosureId = enclosure.id;
+
+        // 2. Buscamos la parcela usando la ref catastral del recinto
+        await db.fetchParcelByRef(enclosure.cadastralRef);
+
+        // 3. Buscamos el municipio usando el código de hoja de la parcela
+        if (db.currentParcel != null) {
+          await db.fetchMunicipalityBySheet(db.currentParcel!['codigo_hoja']);
+        }
+
+        // 4. Buscamos la provincia usando el código INE del municipio
+        if (db.currentMunicipality != null) {
+          await db.fetchProvinceByIne(db.currentMunicipality!['codigo_ine_prov']);
+        }
+        
+        // Refrescamos la UI ya que han cambiado los datos de ubicación
+        if (mounted) setState(() {});
+      }
+    } else {
+      // Si salimos de un recinto, limpiamos el estado
+      if (_lastEnclosureId != null) {
+        _lastEnclosureId = null;
+        db.currentParcel = null;
+        db.currentMunicipality = null;
+        db.currentProvince = null;
+        db.olives = [];
+        if (mounted) setState(() {});
+      }
+    }
   }
 }
-
-// ==========================================
-// SECCIÓN VISUAL (Sin cambios)
-// ==========================================
 
 enum InfoSection {
   coordinates(
@@ -135,13 +168,33 @@ List<Widget> _buildCoordinateFields(Position? pos, Placemark? place) {
 }
 
 List<Widget> _buildAddressFields(Position? pos, Placemark? place) {
+  final db = DatabaseService.instance;
+  
+  // Provincia: (Num_Prov) Nombre Provincia
+  String? provinceText;
+  if (db.currentProvince != null) {
+    provinceText = "(${db.currentProvince!['codigo_ine_prov']}) ${db.currentProvince!['nombre']}";
+  }
+
+  // Ciudad: Nombre (Num_Mun)
+  String? cityText = place?.locality;
+  if (db.currentMunicipality != null) {
+    cityText = "${db.currentMunicipality!['nombre']} (${db.currentMunicipality!['num_municipio']})";
+  }
+
   return [
     _row("País", place?.country),
-    _row("Comunidad Autónoma", place?.administrativeArea),
-    _row("Ciudad", place?.locality),
+    _row("C. Autónoma", place?.administrativeArea),
+    _row("Provincia", provinceText),
+    _row("Municipio", cityText),
     _row("Calle", place?.street),
     _row("Edificio", place?.name),
     _row("Código postal", place?.postalCode),
+    _row("Parcela", db.currentParcel?['num_parcela']?.toString()),
+    // Recinto: (Num_Poligono) Numero de Recinto
+    _row("Recinto", db.currentEnclosure != null 
+        ? "(${db.currentEnclosure!.polygonNumber}) ${db.currentEnclosure!.enclosureNumber}"
+        : null),
   ];
 }
 
