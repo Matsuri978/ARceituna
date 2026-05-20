@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tfg/models/models.dart';
 import 'package:tfg/screens/olive_history_screen.dart';
 
@@ -40,7 +41,11 @@ class OliveInfoCard extends StatelessWidget {
                 children: [
                   Chip(
                     backgroundColor: statusColor.withValues(alpha: 0.2),
-                    avatar: Icon(Icons.park, color: statusColor),
+                    avatar: SvgPicture.asset(
+                      'assets/olive.svg',
+                      colorFilter:
+                          ColorFilter.mode(statusColor, BlendMode.srcIn),
+                    ),
                     label: Text("${olive.id}: $statusText",
                         style: TextStyle(
                             fontWeight: FontWeight.bold, color: statusColor)),
