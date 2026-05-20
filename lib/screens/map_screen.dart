@@ -4,6 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:tfg/services/services.dart';
 import 'package:tfg/models/models.dart';
+import 'package:tfg/utils/olive_info_card.dart';
+
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -15,6 +17,7 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
   String? _lastEnclosureId;
+  Olive? _selectedOlive;
 
   @override
   void initState() {
@@ -41,101 +44,127 @@ class _MapScreenState extends State<MapScreen> {
           final enclosure = db.currentEnclosure;
           final olives = db.olives;
 
-          return FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: LatLng(pos.latitude, pos.longitude),
-              initialZoom: 18.0,
-            ),
+          return Stack(
             children: [
-              TileLayer(
-                // Usamos el servicio WMTS del IGN para evitar el error de bbox
-                urlTemplate: 'https://www.ign.es/wmts/pnoa-ma?layer=OI.OrthoimageCoverage&style=default&tilematrixset=GoogleMapsCompatible&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image/jpeg&TileMatrix={z}&TileCol={x}&TileRow={y}',
-                userAgentPackageName: 'com.example.tfg',
-              ),
-              
-              if (enclosure != null && enclosure.coordinates.isNotEmpty)
-                PolygonLayer(
-                  polygons: [
-                    Polygon(
-                      points: enclosure.coordinates
-                          .map((c) => LatLng(c.latitude, c.longitude))
-                          .toList(),
-                      color: Color.fromARGB(51, 250, 201, 3),
-                      borderStrokeWidth: 3,
-                      borderColor: Color.fromARGB(255, 0, 255, 0),
-                    ),
-                  ],
+              FlutterMap(
+                mapController: _mapController,
+                options: MapOptions(
+                  initialCenter: LatLng(pos.latitude, pos.longitude),
+                  initialZoom: 18.0,
+                  onTap: (_, __) {
+                    setState(() {
+                      _selectedOlive = null;
+                    });
+                  },
                 ),
-
-              MarkerLayer(
-                markers: [
-                  ...olives.map((olive) => Marker(
-                    point: LatLng(olive.latitude, olive.longitude),
-                    width: 40,
-                    height: 40,
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      icon: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.3),
-                              blurRadius: 4,
-                              spreadRadius: 1,
-                            ),
-                          ],
+                children: [
+                  TileLayer(
+                    // Usamos el servicio WMTS del IGN para evitar el error de bbox
+                    urlTemplate:
+                        'https://www.ign.es/wmts/pnoa-ma?layer=OI.OrthoimageCoverage&style=default&tilematrixset=GoogleMapsCompatible&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image/jpeg&TileMatrix={z}&TileCol={x}&TileRow={y}',
+                    userAgentPackageName: 'com.example.tfg',
+                  ),
+                  if (enclosure != null && enclosure.coordinates.isNotEmpty)
+                    PolygonLayer(
+                      polygons: [
+                        Polygon(
+                          points: enclosure.coordinates
+                              .map((c) => LatLng(c.latitude, c.longitude))
+                              .toList(),
+                          color: const Color.fromARGB(51, 250, 201, 3),
+                          borderStrokeWidth: 3,
+                          borderColor: const Color.fromARGB(255, 0, 255, 0),
                         ),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            // Sombras (simulando el efecto del Marker de posición)
-                            ...[
-                              const Offset(-1, -1),
-                              const Offset(1, -1),
-                              const Offset(1, 1),
-                              const Offset(-1, 1),
-                            ].map((offset) => Transform.translate(
-                                  offset: offset,
-                                  child: SvgPicture.asset(
-                                    'assets/olive.svg',
-                                    width: 30,
-                                    height: 30,
-                                    colorFilter: const ColorFilter.mode(
-                                        Colors.black, BlendMode.srcIn),
-                                  ),
-                                )),
-                            // Icono principal
-                            SvgPicture.asset(
-                              'assets/olive.svg',
-                              width: 30,
-                              height: 30,
-                              colorFilter: const ColorFilter.mode(
-                                  Color.fromARGB(255, 35, 87, 23),
-                                  BlendMode.srcIn),
+                      ],
+                    ),
+                  MarkerLayer(
+                    markers: [
+                      ...olives.map((olive) => Marker(
+                            point: LatLng(olive.latitude, olive.longitude),
+                            width: 40,
+                            height: 40,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color:
+                                          Colors.black.withValues(alpha: 0.3),
+                                      blurRadius: 4,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
+                                ),
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    // Sombras (simulando el efecto del Marker de posición)
+                                    ...[
+                                      const Offset(-1, -1),
+                                      const Offset(1, -1),
+                                      const Offset(1, 1),
+                                      const Offset(-1, 1),
+                                    ].map((offset) => Transform.translate(
+                                          offset: offset,
+                                          child: SvgPicture.asset(
+                                            'assets/olive.svg',
+                                            width: 30,
+                                            height: 30,
+                                            colorFilter: const ColorFilter.mode(
+                                                Colors.black, BlendMode.srcIn),
+                                          ),
+                                        )),
+                                    // Icono principal
+                                    SvgPicture.asset(
+                                      'assets/olive.svg',
+                                      width: 30,
+                                      height: 30,
+                                      colorFilter: const ColorFilter.mode(
+                                          Color.fromARGB(255, 35, 87, 23),
+                                          BlendMode.srcIn),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _selectedOlive = olive;
+                                });
+                              },
                             ),
+                          )),
+                      Marker(
+                        point: LatLng(pos.latitude, pos.longitude),
+                        width: 40,
+                        height: 40,
+                        child: const Icon(
+                          Icons.my_location,
+                          color: Colors.blue,
+                          size: 30,
+                          shadows: [
+                            Shadow(offset: Offset(-1, -1), color: Colors.black),
+                            Shadow(offset: Offset(1, -1), color: Colors.black),
+                            Shadow(offset: Offset(1, 1), color: Colors.black),
+                            Shadow(
+                                offset: Offset(-1, 1), color: Colors.black),
                           ],
                         ),
                       ),
-                      onPressed: () {
-                        // Aquí puedes añadir una acción al pulsar el olivo
-                      },
-                    ),
-                  )),
-                  Marker(
-                    point: LatLng(pos.latitude, pos.longitude),
-                    width: 40,
-                    height: 40,
-                    child: const Icon(Icons.my_location, color: Colors.blue, size: 30, shadows: [
-                      Shadow(offset: Offset(-1, -1), color: Colors.black),
-                      Shadow(offset: Offset(1, -1), color: Colors.black),
-                      Shadow(offset: Offset(1, 1), color: Colors.black),
-                      Shadow(offset: Offset(-1, 1), color: Colors.black),
-                    ],),
+                    ],
                   ),
                 ],
               ),
+              if (_selectedOlive != null)
+                OliveInfoCard(
+                  olive: _selectedOlive!,
+                  onClose: () {
+                    setState(() {
+                      _selectedOlive = null;
+                    });
+                  },
+                ),
             ],
           );
         },
