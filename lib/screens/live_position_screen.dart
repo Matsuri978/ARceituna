@@ -16,6 +16,20 @@ class _LivePositionScreenState extends State<LivePositionScreen> {
   void initState() {
     super.initState();
     LocationService.instance.startTracking();
+    LocationService.instance.addListener(_onLocationChanged);
+  }
+
+  @override
+  void dispose() {
+    LocationService.instance.removeListener(_onLocationChanged);
+    super.dispose();
+  }
+
+  void _onLocationChanged() {
+    final pos = LocationService.instance.currentPosition;
+    if (pos != null) {
+      _updateDatabaseContext(pos.latitude, pos.longitude);
+    }
   }
 
   @override
@@ -41,9 +55,6 @@ class _LivePositionScreenState extends State<LivePositionScreen> {
               ),
             );
           }
-
-          // Actualizamos la información de la base de datos de forma modular
-          _updateDatabaseContext(pos.latitude, pos.longitude);
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),

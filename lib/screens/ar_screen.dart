@@ -93,7 +93,7 @@ class _ARScreenState extends State<ARScreen> {
           });
         }
       } catch (e) {
-        debugPrint("Error obteniendo GPS: $e");
+        // Error silenciado
       }
     };
   }
