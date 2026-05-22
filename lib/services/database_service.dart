@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tfg/models/models.dart';
+import 'package:tfg/services/services.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
@@ -179,6 +180,32 @@ class DatabaseService {
           longitude: old.longitude,
         );
       }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Registra un nuevo olivo en la base de datos usando el contexto actual.
+  ///
+  /// Invocada por: DevAddOliveScreen.
+  Future<void> addOlive({
+    required String variety,
+    required String healthStatus,
+  }) async {
+    try {
+      final pos = LocationService.instance.currentPosition;
+      final enclosure = currentEnclosure;
+
+      if (pos == null || enclosure == null) {
+        throw Exception('Falta ubicación o recinto');
+      }
+
+      await _supabase.from('olivos').insert({
+        'id_recinto_sigpac': enclosure.id,
+        'variedad': variety,
+        'estado_salud': healthStatus,
+        'geom': 'POINT(${pos.longitude} ${pos.latitude})',
+      });
     } catch (e) {
       rethrow;
     }

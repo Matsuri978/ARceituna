@@ -31,6 +31,12 @@ enum MenuOption {
     appBarTitle: 'Mapa del Recinto',
     icon: Icons.map,
     screen: MapScreen(),
+  ),
+  devAddOlive(
+    menuTitle: 'Añadir Olivo (Dev)',
+    appBarTitle: 'Herramienta de Desarrollo',
+    icon: Icons.add_location_alt_outlined,
+    screen: DevAddOliveScreen(),
   );
 
   final String menuTitle;
@@ -125,6 +131,22 @@ enum ObservationType {
 
   final String label;
   const ObservationType(this.label);
+
+  static List<String> get labels => values.map((e) => e.label).toList();
+}
+
+/// Variedades de olivos más comunes.
+///
+/// Invocada por: DevAddOliveScreen.
+enum OliveVariety {
+  picual('Picual'),
+  hojiblanca('Hojiblanca'),
+  arbequina('Arbequina'),
+  manzanilla('Manzanilla'),
+  cornicabra('Cornicabra');
+
+  final String label;
+  const OliveVariety(this.label);
 
   static List<String> get labels => values.map((e) => e.label).toList();
 }
