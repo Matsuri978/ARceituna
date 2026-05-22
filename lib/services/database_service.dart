@@ -176,8 +176,7 @@ class DatabaseService {
           enclosureId: old.enclosureId,
           variety: old.variety,
           healthStatus: newStatus,
-          latitude: old.latitude,
-          longitude: old.longitude,
+          location: old.location,
         );
       }
     } catch (e) {

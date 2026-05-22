@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:flutter_compass/flutter_compass.dart';
 
 class LocationService extends ChangeNotifier {
   // ==========================================
@@ -22,12 +23,15 @@ class LocationService extends ChangeNotifier {
   // ==========================================
   Position? _currentPosition;
   Placemark? _currentPlace;
+  double? _currentHeading;
   String _statusMessage = 'Inicializando...';
   StreamSubscription<Position>? _positionStreamSubscription;
+  StreamSubscription<CompassEvent>? _compassSubscription;
 
   // Getters para acceder desde la UI
   Position? get currentPosition => _currentPosition;
   Placemark? get currentPlace => _currentPlace;
+  double? get currentHeading => _currentHeading;
   String get statusMessage => _statusMessage;
 
   // ==========================================
@@ -89,6 +93,12 @@ class LocationService extends ChangeNotifier {
       // Avisa a ListenableBuilder para que redibuje la pantalla
       notifyListeners();
     });
+
+    _compassSubscription?.cancel();
+    _compassSubscription = FlutterCompass.events?.listen((event) {
+      _currentHeading = event.heading;
+      notifyListeners();
+    });
   }
 
   /// Detiene el rastreo de la ubicación y cancela la suscripción al flujo de posiciones.
@@ -97,5 +107,7 @@ class LocationService extends ChangeNotifier {
   void stopTracking() {
     _positionStreamSubscription?.cancel();
     _positionStreamSubscription = null;
+    _compassSubscription?.cancel();
+    _compassSubscription = null;
   }
 }
