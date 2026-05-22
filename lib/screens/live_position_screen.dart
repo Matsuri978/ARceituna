@@ -42,7 +42,10 @@ class _LivePositionScreenState extends State<LivePositionScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade200,
       body: ListenableBuilder(
-        listenable: LocationService.instance,
+        listenable: Listenable.merge([
+          LocationService.instance,
+          DatabaseService.instance,
+        ]),
         builder: (context, child) {
           final pos = LocationService.instance.currentPosition;
           final place = LocationService.instance.currentPlace;

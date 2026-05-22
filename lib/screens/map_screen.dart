@@ -30,7 +30,10 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: ListenableBuilder(
-        listenable: LocationService.instance,
+        listenable: Listenable.merge([
+          LocationService.instance,
+          DatabaseService.instance,
+        ]),
         builder: (context, child) {
           final pos = LocationService.instance.currentPosition;
 

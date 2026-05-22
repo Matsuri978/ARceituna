@@ -33,10 +33,7 @@ class _DevAddOliveScreenState extends State<DevAddOliveScreen> {
     final pos = LocationService.instance.currentPosition;
     if (pos != null) {
       DatabaseService.instance
-          .updateLocationContext(pos.latitude, pos.longitude)
-          .then((_) {
-        if (mounted) setState(() {});
-      });
+          .updateLocationContext(pos.latitude, pos.longitude);
     }
   }
 
@@ -49,7 +46,7 @@ class _DevAddOliveScreenState extends State<DevAddOliveScreen> {
         healthStatus: _selectedStatus,
       );
       if (mounted) {
-        showMessage(context, 'Olivo registrado con éxito');
+        showMessage(context, 'Olivo registrado con éxito', neutral: true);
       }
     } catch (e) {
       if (mounted) {
@@ -65,7 +62,10 @@ class _DevAddOliveScreenState extends State<DevAddOliveScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade200,
       body: ListenableBuilder(
-        listenable: LocationService.instance,
+        listenable: Listenable.merge([
+          LocationService.instance,
+          DatabaseService.instance,
+        ]),
         builder: (context, child) {
           final pos = LocationService.instance.currentPosition;
           final enclosure = DatabaseService.instance.currentEnclosure;

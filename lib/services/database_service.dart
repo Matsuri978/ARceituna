@@ -1,8 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tfg/models/models.dart';
 import 'package:tfg/services/services.dart';
 
-class DatabaseService {
+class DatabaseService extends ChangeNotifier {
   static final DatabaseService _instance = DatabaseService._internal();
 
   factory DatabaseService() {
@@ -39,8 +40,10 @@ class DatabaseService {
           .eq('id_recinto_sigpac', enclosureId);
 
       olives = response.map((json) => Olive.fromMap(json)).toList();
+      notifyListeners();
     } catch (e) {
       olives = [];
+      notifyListeners();
     }
   }
 
@@ -84,6 +87,7 @@ class DatabaseService {
           currentMunicipality = null;
           currentProvince = null;
           olives = [];
+          notifyListeners();
           return true; // Cambio de "estar dentro" a "estar fuera"
         }
         return false;
@@ -123,8 +127,10 @@ class DatabaseService {
           .select()
           .eq('ref_catastral', cadastralRef)
           .maybeSingle();
+      notifyListeners();
     } catch (e) {
       currentParcel = null;
+      notifyListeners();
     }
   }
 
@@ -138,8 +144,10 @@ class DatabaseService {
           .select()
           .eq('codigo_hoja', sheetCode)
           .maybeSingle();
+      notifyListeners();
     } catch (e) {
       currentMunicipality = null;
+      notifyListeners();
     }
   }
 
@@ -153,8 +161,10 @@ class DatabaseService {
           .select()
           .eq('codigo_ine_prov', ineCode)
           .maybeSingle();
+      notifyListeners();
     } catch (e) {
       currentProvince = null;
+      notifyListeners();
     }
   }
 
@@ -178,6 +188,7 @@ class DatabaseService {
           healthStatus: newStatus,
           location: old.location,
         );
+        notifyListeners();
       }
     } catch (e) {
       rethrow;
@@ -205,6 +216,9 @@ class DatabaseService {
         'estado_salud': healthStatus,
         'geom': 'POINT(${pos.longitude} ${pos.latitude})',
       });
+
+      // Refrescar la lista local de olivos para incluir el nuevo
+      await _updateOlivesByEnclosure(enclosure.id);
     } catch (e) {
       rethrow;
     }
