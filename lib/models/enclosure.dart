@@ -1,5 +1,5 @@
 import 'coordinate.dart';
-import 'package:tfg/utils/helpers.dart';
+import 'package:tfg/utils/utils.dart';
 
 class Enclosure {
   final String id;

@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:tfg/models/models.dart';
 import 'package:tfg/services/services.dart';
-import 'package:tfg/utils/utils.dart';
+
 
 class DatabaseService extends ChangeNotifier {
   static final DatabaseService _instance = DatabaseService._internal();

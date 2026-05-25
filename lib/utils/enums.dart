@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:tfg/screens/screens.dart';
-import 'package:tfg/utils/helpers.dart';
+import 'package:tfg/utils/utils.dart';
 
 /// Opciones del menú lateral de la aplicación.
 ///

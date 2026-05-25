@@ -32,9 +32,6 @@ class _OliveInfoCardState extends State<OliveInfoCard> {
     _selectedStatus = _currentStatus;
   }
 
-  /// Reinicia el estado de edición de la tarjeta.
-  ///
-  /// Invocada por: Botón de cierre o cancelación de edición.
   void _resetUI() {
     setState(() {
       _isEditing = false;
@@ -74,7 +71,6 @@ class _OliveInfoCardState extends State<OliveInfoCard> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- CABECERA ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -93,7 +89,6 @@ class _OliveInfoCardState extends State<OliveInfoCard> {
                 ],
               ),
               const Divider(),
-
               const SizedBox(height: 4),
               infoRow("Variedad", widget.olive.variety ?? "Desconocida",
                   isBetween: true,
@@ -108,9 +103,7 @@ class _OliveInfoCardState extends State<OliveInfoCard> {
                   isBetween: true,
                   labelColor: Colors.green,
                   valueWeight: FontWeight.bold),
-
               const SizedBox(height: 10),
-
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -156,9 +149,7 @@ class _OliveInfoCardState extends State<OliveInfoCard> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 15),
-
               if (AuthService.instance.currentRole != 'guest' &&
                   AuthService.instance.currentRole.isNotEmpty)
                 SizedBox(
@@ -189,9 +180,6 @@ class _OliveInfoCardState extends State<OliveInfoCard> {
     );
   }
 
-  /// Construye la fila de estado, permitiendo cambiar entre visualización y edición.
-  ///
-  /// Invocada por: build() de OliveInfoCard.
   Widget _buildStatusRow() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4.0),
@@ -228,9 +216,6 @@ class _OliveInfoCardState extends State<OliveInfoCard> {
     );
   }
 
-  /// Construye los botones de gestión (Modificar, Aceptar, Cancelar) según el rol y estado de edición.
-  ///
-  /// Invocada por: build() de OliveInfoCard.
   Widget _buildManagementButtons() {
     final role = AuthService.instance.currentRole;
     if (role != 'tecnico' && role != 'admin') return const SizedBox.shrink();
@@ -306,4 +291,3 @@ class _OliveInfoCardState extends State<OliveInfoCard> {
     }
   }
 }
-
