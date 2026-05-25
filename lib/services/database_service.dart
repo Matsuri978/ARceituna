@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:tfg/models/models.dart';
 import 'package:tfg/services/services.dart';
+import 'package:tfg/utils/utils.dart';
 
 class DatabaseService extends ChangeNotifier {
   static final DatabaseService _instance = DatabaseService._internal();
@@ -24,6 +26,10 @@ class DatabaseService extends ChangeNotifier {
   Map<String, dynamic>? currentParcel;
   Map<String, dynamic>? currentMunicipality;
   Map<String, dynamic>? currentProvince;
+
+  // Optimización: Guardar la última posición de búsqueda para evitar spam fuera de recintos
+  Position? _lastSearchPosition;
+  static const double _minDistanceForNewSearch = 10.0; // metros
 
   // ==========================================
   // OLIVOS
@@ -54,7 +60,7 @@ class DatabaseService extends ChangeNotifier {
   /// Obtiene el recinto por coordenadas llamando a la función RPC de Postgres.
   ///
   /// Invocada por: updateLocationContext.
-  Future<Enclosure?> fetchEnclosureByCoordinates(double lat, double lng) async {
+  Future<Enclosure?> _fetchEnclosureByCoordinates(double lat, double lng) async {
     try {
       // Llamamos a la función RPC creada en Supabase (get_enclosure_by_point)
       final response = await _supabase.rpc('get_enclosure_by_point', params: {
@@ -78,7 +84,45 @@ class DatabaseService extends ChangeNotifier {
   /// Invocada por: LivePositionScreen y MapScreen en cada cambio de ubicación detectado.
   Future<bool> updateLocationContext(double lat, double lng) async {
     try {
-      final enclosure = await fetchEnclosureByCoordinates(lat, lng);
+      // 1. COMPROBACIÓN LOCAL (Algoritmo Ray Casting)
+      // Si ya tenemos un recinto, comprobamos matemáticamente si seguimos dentro.
+      if (currentEnclosure != null && currentEnclosure!.coordinates.isNotEmpty) {
+        bool stillInside = isPointInPolygon(lat, lng, currentEnclosure!.coordinates);
+        if (stillInside) {
+          return false; // Seguimos dentro, optimizamos evitando la petición a la DB.
+        }
+      }
+
+      // 2. CONTROL DE FLUJO (Cooldown por distancia)
+      // Si estamos fuera de un recinto, solo buscamos uno nuevo si nos hemos movido 
+      // una distancia significativa (10m) desde la última búsqueda fallida.
+      if (currentEnclosure == null && _lastSearchPosition != null) {
+        double distance = Geolocator.distanceBetween(
+          _lastSearchPosition!.latitude,
+          _lastSearchPosition!.longitude,
+          lat,
+          lng,
+        );
+        if (distance < _minDistanceForNewSearch) {
+          return false; 
+        }
+      }
+
+      // 3. PETICIÓN A BASE DE DATOS (Solo si las comprobaciones anteriores fallan)
+      _lastSearchPosition = Position(
+        latitude: lat,
+        longitude: lng,
+        timestamp: DateTime.now(),
+        accuracy: 0,
+        altitude: 0,
+        altitudeAccuracy: 0,
+        heading: 0,
+        headingAccuracy: 0,
+        speed: 0,
+        speedAccuracy: 0,
+      );
+
+      final enclosure = await _fetchEnclosureByCoordinates(lat, lng);
 
       if (enclosure == null) {
         if (currentEnclosure != null) {
@@ -90,11 +134,6 @@ class DatabaseService extends ChangeNotifier {
           notifyListeners();
           return true; // Cambio de "estar dentro" a "estar fuera"
         }
-        return false;
-      }
-
-      // Si el recinto es el mismo que ya tenemos, no hacemos nada más
-      if (currentEnclosure?.id == enclosure.id) {
         return false;
       }
 

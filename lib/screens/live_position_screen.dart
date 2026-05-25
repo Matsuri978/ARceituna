@@ -30,10 +30,7 @@ class _LivePositionScreenState extends State<LivePositionScreen> {
     final pos = LocationService.instance.currentPosition;
     if (pos != null) {
       DatabaseService.instance
-          .updateLocationContext(pos.latitude, pos.longitude)
-          .then((hasChanged) {
-        if (hasChanged && mounted) setState(() {});
-      });
+          .updateLocationContext(pos.latitude, pos.longitude);
     }
   }
 

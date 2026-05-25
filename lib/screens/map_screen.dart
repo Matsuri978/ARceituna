@@ -24,6 +24,26 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
     LocationService.instance.startTracking();
+    LocationService.instance.addListener(_onLocationChanged);
+  }
+
+  @override
+  void dispose() {
+    LocationService.instance.removeListener(_onLocationChanged);
+    super.dispose();
+  }
+
+  void _onLocationChanged() {
+    final pos = LocationService.instance.currentPosition;
+    if (pos != null) {
+      DatabaseService.instance
+          .updateLocationContext(pos.latitude, pos.longitude)
+          .then((hasChanged) {
+        if (hasChanged && mounted) {
+          _focusOnCurrentLocation();
+        }
+      });
+    }
   }
 
   @override
@@ -40,16 +60,6 @@ class _MapScreenState extends State<MapScreen> {
           if (pos == null) {
             return const Center(child: CircularProgressIndicator());
           }
-
-          // Actualizamos la información de la base de datos de forma modular
-          DatabaseService.instance
-              .updateLocationContext(pos.latitude, pos.longitude)
-              .then((hasChanged) {
-            if (hasChanged && mounted) {
-              _focusOnCurrentLocation();
-              setState(() {});
-            }
-          });
 
           final db = DatabaseService.instance;
           final enclosure = db.currentEnclosure;
