@@ -161,7 +161,7 @@ class _MapScreenState extends State<MapScreen> {
                   ),
                 );
               },
-              backgroundColor: Colors.orange.shade800,
+              backgroundColor: Colors.green.shade700,
               foregroundColor: Colors.white,
               child: const Icon(Icons.dynamic_feed, size: 30),
             ),
