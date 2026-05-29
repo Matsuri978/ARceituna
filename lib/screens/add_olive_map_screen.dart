@@ -73,14 +73,14 @@ class _AddOliveMapScreenState extends State<AddOliveMapScreen> {
               Text('Recinto: ${enclosure.id}', style: const TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: selectedVariety,
+                initialValue: selectedVariety,
                 decoration: const InputDecoration(labelText: 'Variedad', border: OutlineInputBorder()),
                 items: OliveVariety.labels.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
                 onChanged: (val) => setDialogState(() => selectedVariety = val!),
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: selectedStatus,
+                initialValue: selectedStatus,
                 decoration: const InputDecoration(labelText: 'Estado inicial', border: OutlineInputBorder()),
                 items: OliveStatus.labels.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
                 onChanged: (val) => setDialogState(() => selectedStatus = val!),

@@ -250,7 +250,7 @@ class DatabaseService extends ChangeNotifier {
   /// Registra un nuevo olivo en la base de datos.
   ///
   /// Si no se proporcionan coordenadas o ID de recinto, usa el contexto actual.
-  /// Invocada por: DevAddOliveScreen y flujos de selección manual.
+  /// Invocada por: AddOliveScreen y flujos de selección manual.
   Future<void> addOlive({
     required String variety,
     required String healthStatus,

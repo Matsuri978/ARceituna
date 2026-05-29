@@ -82,7 +82,7 @@ enum MenuOption {
     menuTitle: 'Añadir Olivo',
     appBarTitle: 'Registro de Olivos',
     icon: Icons.add_location_alt_outlined,
-    screen: DevAddOliveScreen(),
+    screen: AddOliveScreen(),
   );
 
   final String menuTitle;
@@ -189,7 +189,7 @@ enum ObservationType {
 
 /// Variedades de olivos más comunes.
 ///
-/// Invocada por: DevAddOliveScreen.
+/// Invocada por: AddOliveScreen.
 enum OliveVariety {
   picual('Picual'),
   hojiblanca('Hojiblanca'),

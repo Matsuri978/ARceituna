@@ -6,7 +6,6 @@ import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:arceituna/services/services.dart';
 import 'package:arceituna/models/models.dart';
 import 'package:arceituna/utils/utils.dart';
-import 'package:arceituna/screens/screens.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});

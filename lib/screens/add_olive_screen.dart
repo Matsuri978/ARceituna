@@ -5,14 +5,14 @@ import 'package:arceituna/services/services.dart';
 import 'package:arceituna/utils/utils.dart';
 import 'package:arceituna/screens/screens.dart';
 
-class DevAddOliveScreen extends StatefulWidget {
-  const DevAddOliveScreen({super.key});
+class AddOliveScreen extends StatefulWidget {
+  const AddOliveScreen({super.key});
 
   @override
-  State<DevAddOliveScreen> createState() => _DevAddOliveScreenState();
+  State<AddOliveScreen> createState() => _AddOliveScreenState();
 }
 
-class _DevAddOliveScreenState extends State<DevAddOliveScreen> {
+class _AddOliveScreenState extends State<AddOliveScreen> {
   String _selectedVariety = OliveVariety.picual.label;
   String _selectedStatus = OliveStatus.healthy.label;
   bool _isSaving = false;
@@ -232,7 +232,7 @@ class _DevAddOliveScreenState extends State<DevAddOliveScreen> {
         child: Column(
           children: [
             DropdownButtonFormField<String>(
-              value: _selectedVariety,
+              initialValue: _selectedVariety,
               decoration: const InputDecoration(
                 labelText: 'Variedad de Olivo',
                 prefixIcon: Icon(Icons.eco),
@@ -245,7 +245,7 @@ class _DevAddOliveScreenState extends State<DevAddOliveScreen> {
             ),
             const SizedBox(height: 20),
             DropdownButtonFormField<String>(
-              value: _selectedStatus,
+              initialValue: _selectedStatus,
               decoration: const InputDecoration(
                 labelText: 'Estado de Salud inicial',
                 prefixIcon: Icon(Icons.health_and_safety),
