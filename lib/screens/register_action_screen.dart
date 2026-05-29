@@ -5,7 +5,7 @@ import 'package:arceituna/utils/utils.dart';
 
 class RegisterActionScreen extends StatefulWidget {
   final Olive olive;
-  final String role;
+  final UserRole role;
 
   const RegisterActionScreen({
     super.key,
@@ -102,7 +102,7 @@ class _RegisterActionScreenState extends State<RegisterActionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    bool canObserve = widget.role == 'tecnico' || widget.role == 'admin';
+    bool canObserve = widget.role.canRegisterObservations;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),

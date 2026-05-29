@@ -98,7 +98,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 10),
             ...MenuOption.values
-                .where((option) => option != MenuOption.profile)
+                .where((option) =>
+                    option != MenuOption.profile &&
+                    option.isVisible(AuthService.instance.currentRole))
                 .map((option) {
               return ListTile(
                 leading: Icon(option.icon, size: 30, color: Colors.black87),

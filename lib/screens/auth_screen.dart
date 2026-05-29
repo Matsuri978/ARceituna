@@ -19,7 +19,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
   bool _isLoading = false;
   bool _isLogin = true;
-  String _selectedRole = 'agricultor';
+  UserRole _selectedRole = UserRole.farmer;
 
   @override
   void dispose() {
@@ -61,7 +61,7 @@ class _AuthScreenState extends State<AuthScreen> {
           email: email,
           password: password,
           name: name,
-          role: _selectedRole,
+          role: _selectedRole.dbValue, // Usamos dbValue para la base de datos
         );
       }
 
@@ -155,20 +155,21 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                DropdownButtonFormField<String>(
-                  initialValue: _selectedRole,
+                DropdownButtonFormField<UserRole>(
+                  value: _selectedRole,
                   decoration: InputDecoration(
                     labelText: 'Selecciona tu perfil',
                     prefixIcon: const Icon(Icons.badge_outlined),
-                    border:
-                        OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15)),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'agricultor', child: Text('Agricultor')),
-                    DropdownMenuItem(
-                        value: 'tecnico', child: Text('Técnico Agrícola')),
-                  ],
-                  onChanged: (String? newValue) {
+                  items: UserRole.registrationRoles.map((role) {
+                    return DropdownMenuItem<UserRole>(
+                      value: role,
+                      child: Text(role.label),
+                    );
+                  }).toList(),
+                  onChanged: (UserRole? newValue) {
                     if (newValue != null) setState(() => _selectedRole = newValue);
                   },
                 ),

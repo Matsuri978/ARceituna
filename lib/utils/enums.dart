@@ -4,6 +4,52 @@ import 'package:geocoding/geocoding.dart';
 import 'package:arceituna/screens/screens.dart';
 import 'package:arceituna/utils/utils.dart';
 
+/// Roles de usuario definidos en el sistema.
+enum UserRole {
+  guest(label: 'Invitado', dbValue: 'guest'),
+  farmer(label: 'Agricultor', dbValue: 'agricultor'),
+  fieldManager(label: 'Gestor de Campo', dbValue: 'gestor_campo'),
+  technician(label: 'Técnico', dbValue: 'tecnico'),
+  admin(label: 'Administrador', dbValue: 'admin');
+
+  final String label;
+  final String dbValue;
+  const UserRole({required this.label, required this.dbValue});
+
+  /// Convierte un String de la base de datos a un UserRole.
+  static UserRole fromString(String? roleStr) {
+    return UserRole.values.firstWhere(
+      (e) => e.dbValue == roleStr?.toLowerCase(),
+      orElse: () => UserRole.guest,
+    );
+  }
+
+  // --- Permisos Granulares (Basados en la lógica original) ---
+  bool get canAddOlive => this == fieldManager || this == admin;
+  bool get canRegisterTreatments =>
+      this == farmer ||
+      this == technician ||
+      this == admin;
+  bool get canRegisterObservations => this == technician || this == admin;
+  bool get canModifyOlives =>
+      this == technician || this == admin || this == fieldManager;
+  bool get canUseDevTools => this == admin;
+
+  /// Roles disponibles para el registro de nuevos usuarios (excluye Guest y Admin).
+  static List<UserRole> get registrationRoles =>
+      [farmer, technician, fieldManager];
+
+  /// Mapa de permisos para mostrar en la pantalla de perfil.
+  Map<String, bool> get permissionsMap => {
+        'Ver ubicación y mapas': true,
+        'Uso de Escáner AR': true,
+        'Registrar Tratamientos': canRegisterTreatments,
+        'Registrar Observaciones': canRegisterObservations,
+        'Modificar datos de Olivos': canModifyOlives,
+        'Añadir nuevos Olivos': canAddOlive,
+      };
+}
+
 /// Opciones del menú lateral de la aplicación.
 ///
 /// Invocada por: HomeScreen (construcción del Drawer y gestión de navegación).
@@ -32,9 +78,9 @@ enum MenuOption {
     icon: Icons.map,
     screen: MapScreen(),
   ),
-  devAddOlive(
-    menuTitle: 'Añadir Olivo (Dev)',
-    appBarTitle: 'Herramienta de Desarrollo',
+  addOlive(
+    menuTitle: 'Añadir Olivo',
+    appBarTitle: 'Registro de Olivos',
     icon: Icons.add_location_alt_outlined,
     screen: DevAddOliveScreen(),
   );
@@ -50,6 +96,12 @@ enum MenuOption {
     required this.icon,
     required this.screen,
   });
+
+  /// Filtro de visibilidad para el menú lateral.
+  bool isVisible(UserRole role) {
+    if (this == addOlive) return role.canAddOlive;
+    return true;
+  }
 }
 
 /// Secciones de información detallada en la pantalla de posición en vivo.

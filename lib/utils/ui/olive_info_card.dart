@@ -150,14 +150,12 @@ class _OliveInfoCardState extends State<OliveInfoCard> {
                 ),
               ),
               const SizedBox(height: 15),
-              if (AuthService.instance.currentRole != 'guest' &&
-                  AuthService.instance.currentRole.isNotEmpty)
+              if (AuthService.instance.currentRole != UserRole.guest)
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     icon: const Icon(Icons.add_circle_outline),
-                    label: Text((AuthService.instance.currentRole == 'tecnico' ||
-                            AuthService.instance.currentRole == 'admin')
+                    label: Text(AuthService.instance.currentRole.canRegisterObservations
                         ? "Registrar Observación/Tratamiento"
                         : "Registrar Tratamiento"),
                     onPressed: () {
@@ -218,7 +216,7 @@ class _OliveInfoCardState extends State<OliveInfoCard> {
 
   Widget _buildManagementButtons() {
     final role = AuthService.instance.currentRole;
-    if (role != 'tecnico' && role != 'admin') return const SizedBox.shrink();
+    if (!role.canModifyOlives) return const SizedBox.shrink();
 
     if (_isEditing) {
       return Row(

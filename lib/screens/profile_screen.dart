@@ -12,14 +12,12 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final _user = AuthService.instance.currentUser;
-  late final String _role;
+  late final UserRole _role;
 
   @override
   void initState() {
     super.initState();
-    _role = AuthService.instance.currentRole.isEmpty
-        ? 'guest'
-        : AuthService.instance.currentRole;
+    _role = AuthService.instance.currentRole;
   }
 
   /// Gestiona el cierre de sesión o la salida del modo invitado con confirmación.
@@ -84,7 +82,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             infoCard(
               title: 'Rol en el sistema',
-              value: isGuest ? 'Invitado' : _role.capitalize(),
+              value: isGuest ? 'Invitado' : _role.label,
               icon: Icons.settings_accessibility,
               iconColor: Colors.green.shade700,
             ),
@@ -94,7 +92,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            ...AuthService.instance.getPermissions().entries.map((entry) {
+            ..._role.permissionsMap.entries.map((entry) {
               return ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: Icon(
