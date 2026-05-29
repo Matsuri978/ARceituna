@@ -207,14 +207,20 @@ enum OliveVariety {
 ///
 /// Invocada por: OliveInfoCard.
 enum OliveStatus {
-  healthy('Sano'),
-  sick('Enfermo'),
-  underTreatment('En Tratamiento');
+  healthy('Sano', Colors.green, "ESTADO ÓPTIMO"),
+  sick('Enfermo', Colors.red, "ATENCIÓN REQUERIDA"),
+  underTreatment('En Tratamiento', Colors.blue, "EN TRATAMIENTO");
 
   final String label;
-  const OliveStatus(this.label);
+  final Color color;
+  final String infoText;
+  const OliveStatus(this.label, this.color, this.infoText);
 
   static List<String> get labels => values.map((e) => e.label).toList();
+
+  static OliveStatus fromLabel(String? label) {
+    return values.firstWhere((e) => e.label == label, orElse: () => healthy);
+  }
 }
 
 /// Estados posibles de una observación en el historial.

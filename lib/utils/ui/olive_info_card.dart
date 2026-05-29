@@ -41,19 +41,9 @@ class _OliveInfoCardState extends State<OliveInfoCard> {
 
   @override
   Widget build(BuildContext context) {
-    Color statusColor;
-    String statusText;
-
-    if (_currentStatus == 'Enfermo') {
-      statusColor = Colors.red;
-      statusText = "ATENCIÓN REQUERIDA";
-    } else if (_currentStatus == 'En Tratamiento') {
-      statusColor = Colors.blue;
-      statusText = "EN TRATAMIENTO";
-    } else {
-      statusColor = Colors.green;
-      statusText = "ESTADO ÓPTIMO";
-    }
+    final status = OliveStatus.fromLabel(_currentStatus);
+    final statusColor = status.color;
+    final statusText = status.infoText;
 
     return Positioned(
       bottom: 30,
@@ -163,7 +153,7 @@ class _OliveInfoCardState extends State<OliveInfoCard> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => RegisterActionScreen(
-                            olive: widget.olive,
+                            olives: [widget.olive],
                             role: AuthService.instance.currentRole,
                           ),
                         ),
