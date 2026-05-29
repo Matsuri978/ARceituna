@@ -35,6 +35,20 @@ class DatabaseService extends ChangeNotifier {
   // OLIVOS
   // ==========================================
 
+  /// Obtiene la lista de olivos para un recinto específico sin afectar al estado global.
+  Future<List<Olive>> fetchOlivesByEnclosure(String enclosureId) async {
+    try {
+      final List<dynamic> response = await _supabase
+          .from('olivos')
+          .select()
+          .eq('id_recinto_sigpac', enclosureId);
+
+      return response.map((json) => Olive.fromMap(json)).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
   /// Obtiene y actualiza la lista local de olivos para un recinto específico.
   ///
   /// Invocada por: updateLocationContext cuando cambia el recinto.
@@ -59,8 +73,8 @@ class DatabaseService extends ChangeNotifier {
 
   /// Obtiene el recinto por coordenadas llamando a la función RPC de Postgres.
   ///
-  /// Invocada por: updateLocationContext.
-  Future<Enclosure?> _fetchEnclosureByCoordinates(double lat, double lng) async {
+  /// Invocada por: updateLocationContext y flujos de selección manual.
+  Future<Enclosure?> fetchEnclosureByCoordinates(double lat, double lng) async {
     try {
       // Llamamos a la función RPC creada en Supabase (get_enclosure_by_point)
       final response = await _supabase.rpc('get_enclosure_by_point', params: {
@@ -121,7 +135,7 @@ class DatabaseService extends ChangeNotifier {
         speedAccuracy: 0,
       );
 
-      final enclosure = await _fetchEnclosureByCoordinates(lat, lng);
+      final enclosure = await fetchEnclosureByCoordinates(lat, lng);
 
       if (enclosure == null) {
         if (currentEnclosure != null) {
@@ -233,30 +247,38 @@ class DatabaseService extends ChangeNotifier {
     }
   }
 
-  /// Registra un nuevo olivo en la base de datos usando el contexto actual.
+  /// Registra un nuevo olivo en la base de datos.
   ///
-  /// Invocada por: DevAddOliveScreen.
+  /// Si no se proporcionan coordenadas o ID de recinto, usa el contexto actual.
+  /// Invocada por: DevAddOliveScreen y flujos de selección manual.
   Future<void> addOlive({
     required String variety,
     required String healthStatus,
+    double? lat,
+    double? lng,
+    String? enclosureId,
   }) async {
     try {
-      final pos = LocationService.instance.currentPosition;
-      final enclosure = currentEnclosure;
+      final finalLat = lat ?? LocationService.instance.currentPosition?.latitude;
+      final finalLng =
+          lng ?? LocationService.instance.currentPosition?.longitude;
+      final finalEnclosureId = enclosureId ?? currentEnclosure?.id;
 
-      if (pos == null || enclosure == null) {
+      if (finalLat == null || finalLng == null || finalEnclosureId == null) {
         throw Exception('Falta ubicación o recinto');
       }
 
       await _supabase.from('olivos').insert({
-        'id_recinto_sigpac': enclosure.id,
+        'id_recinto_sigpac': finalEnclosureId,
         'variedad': variety,
         'estado_salud': healthStatus,
-        'geom': 'POINT(${pos.longitude} ${pos.latitude})',
+        'geom': 'POINT($finalLng $finalLat)',
       });
 
-      // Refrescar la lista local de olivos para incluir el nuevo
-      await _updateOlivesByEnclosure(enclosure.id);
+      // Refrescar la lista local si el olivo pertenece al recinto que estamos viendo
+      if (finalEnclosureId == currentEnclosure?.id) {
+        await _updateOlivesByEnclosure(finalEnclosureId);
+      }
     } catch (e) {
       rethrow;
     }

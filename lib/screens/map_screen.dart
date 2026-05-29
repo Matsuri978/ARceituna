@@ -6,6 +6,7 @@ import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:arceituna/services/services.dart';
 import 'package:arceituna/models/models.dart';
 import 'package:arceituna/utils/utils.dart';
+import 'package:arceituna/screens/screens.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -67,118 +68,23 @@ class _MapScreenState extends State<MapScreen> {
 
           return Stack(
             children: [
-              FlutterMap(
-                mapController: _mapController,
-                options: MapOptions(
-                  initialCenter: LatLng(pos.latitude, pos.longitude),
-                  initialZoom: 18.0,
-                  onTap: (_, __) {
-                    setState(() {
-                      _selectedOlive = null;
-                    });
-                  },
-                ),
-                children: [
-                  TileLayer(
-                    // Usamos el servicio WMTS del IGN para evitar el error de bbox
-                    urlTemplate:
-                        'https://www.ign.es/wmts/pnoa-ma?layer=OI.OrthoimageCoverage&style=default&tilematrixset=GoogleMapsCompatible&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image/jpeg&TileMatrix={z}&TileCol={x}&TileRow={y}',
-                    userAgentPackageName: 'com.example.arceituna',
-                  ),
-                  if (enclosure != null && enclosure.coordinates.isNotEmpty)
-                    PolygonLayer(
-                      polygons: [
-                        Polygon(
-                          points: enclosure.coordinates
-                              .map((c) => LatLng(c.latitude, c.longitude))
-                              .toList(),
-                          color: const Color.fromARGB(51, 250, 201, 3),
-                          borderStrokeWidth: 3,
-                          borderColor: const Color.fromARGB(255, 0, 255, 0),
-                        ),
-                      ],
-                    ),
-                  MarkerLayer(
-                    markers: [
-                      if (_showOlives)
-                        ...olives.map((olive) => Marker(
-                              point: LatLng(olive.location.latitude,
-                                  olive.location.longitude),
-                              width: 40,
-                              height: 40,
-                              child: IconButton(
-                                padding: EdgeInsets.zero,
-                                icon: Container(
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color:
-                                            Colors.black.withValues(alpha: 0.3),
-                                        blurRadius: 4,
-                                        spreadRadius: 1,
-                                      ),
-                                    ],
-                                  ),
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      // Sombras (simulando el efecto del Marker de posición)
-                                      ...[
-                                        const Offset(-1, -1),
-                                        const Offset(1, -1),
-                                        const Offset(1, 1),
-                                        const Offset(-1, 1),
-                                      ].map((offset) => Transform.translate(
-                                            offset: offset,
-                                            child: SvgPicture.asset(
-                                              'assets/olive.svg',
-                                              width: 30,
-                                              height: 30,
-                                              colorFilter:
-                                                  const ColorFilter.mode(
-                                                      Colors.black,
-                                                      BlendMode.srcIn),
-                                            ),
-                                          )),
-                                      // Icono principal
-                                      SvgPicture.asset(
-                                        'assets/olive.svg',
-                                        width: 30,
-                                        height: 30,
-                                        colorFilter: const ColorFilter.mode(
-                                            Color.fromARGB(255, 35, 87, 23),
-                                            BlendMode.srcIn),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _selectedOlive = olive;
-                                  });
-                                },
-                              ),
-                            )),
-                      Marker(
-                        point: LatLng(pos.latitude, pos.longitude),
-                        width: 40,
-                        height: 40,
-                        child: const Icon(
-                          Icons.my_location,
-                          color: Colors.blue,
-                          size: 30,
-                          shadows: [
-                            Shadow(offset: Offset(-1, -1), color: Colors.black),
-                            Shadow(offset: Offset(1, -1), color: Colors.black),
-                            Shadow(offset: Offset(1, 1), color: Colors.black),
-                            Shadow(offset: Offset(-1, 1), color: Colors.black),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+              BaseMapView(
+                controller: _mapController,
+                initialCenter: LatLng(pos.latitude, pos.longitude),
+                enclosure: enclosure,
+                olives: olives,
+                userLocation: LatLng(pos.latitude, pos.longitude),
+                showOlives: _showOlives,
+                onTap: (_, __) {
+                  setState(() {
+                    _selectedOlive = null;
+                  });
+                },
+                onOliveTap: (olive) {
+                  setState(() {
+                    _selectedOlive = olive;
+                  });
+                },
               ),
               if (_selectedOlive != null)
                 OliveInfoCard(
