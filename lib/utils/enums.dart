@@ -4,6 +4,9 @@ import 'package:geocoding/geocoding.dart';
 import 'package:arceituna/screens/screens.dart';
 import 'package:arceituna/utils/utils.dart';
 
+/// Flag para activar/desactivar el modo desarrollo.
+const bool isDevMode = true;
+
 /// Roles de usuario definidos en el sistema.
 enum UserRole {
   guest(label: 'Invitado', dbValue: 'guest'),
@@ -35,9 +38,13 @@ enum UserRole {
       this == technician || this == admin || this == fieldManager;
   bool get canUseDevTools => this == admin;
 
-  /// Roles disponibles para el registro de nuevos usuarios (excluye Guest y Admin).
-  static List<UserRole> get registrationRoles =>
-      [farmer, technician, fieldManager];
+  /// Roles disponibles para el registro de nuevos usuarios (excluye Guest por defecto).
+  static List<UserRole> get registrationRoles => [
+        farmer,
+        technician,
+        fieldManager,
+        if (isDevMode) admin,
+      ];
 
   /// Mapa de permisos para mostrar en la pantalla de perfil.
   Map<String, bool> get permissionsMap => {
