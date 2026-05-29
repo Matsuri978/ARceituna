@@ -4,12 +4,12 @@ import 'package:arceituna/services/services.dart';
 import 'package:arceituna/utils/utils.dart';
 
 class RegisterActionScreen extends StatefulWidget {
-  final Olive olive;
+  final List<Olive> olives;
   final UserRole role;
 
   const RegisterActionScreen({
     super.key,
-    required this.olive,
+    required this.olives,
     required this.role,
   });
 
@@ -72,16 +72,18 @@ class _RegisterActionScreenState extends State<RegisterActionScreen> {
     setState(() => _isSaving = true);
 
     try {
+      final List<int> oliveIds = widget.olives.map((o) => o.id).toList();
+
       if (isTreatment) {
         await DatabaseService.instance.addTreatment(
-          oliveId: widget.olive.id,
+          oliveIds: oliveIds,
           product: _productController.text.trim(),
           dose: _doseController.text.trim(),
           date: _selectedDate,
         );
       } else {
         await DatabaseService.instance.addObservation(
-          oliveId: widget.olive.id,
+          oliveIds: oliveIds,
           type: _selectedType!,
           status: _selectedStatus!,
           description: _descriptionController.text.trim(),
@@ -110,7 +112,9 @@ class _RegisterActionScreenState extends State<RegisterActionScreen> {
         length: canObserve ? 2 : 1,
         child: Scaffold(
           appBar: AppBar(
-            title: Text("Nuevo registro"),
+            title: Text(widget.olives.length > 1 
+                ? "Acción en Recinto (${widget.olives.length} olivos)"
+                : "Nuevo registro"),
             backgroundColor: Colors.green.shade700,
             foregroundColor: Colors.white,
             bottom: TabBar(

@@ -318,45 +318,45 @@ class DatabaseService extends ChangeNotifier {
     }
   }
 
-  /// Registra un nuevo tratamiento para un olivo.
-  ///
-  /// Invocada por: RegisterActionScreen.
+  /// Registra un nuevo tratamiento para uno o varios olivos.
   Future<void> addTreatment({
-    required int oliveId,
+    required List<int> oliveIds,
     required String product,
     required String dose,
     required DateTime date,
   }) async {
     try {
-      await _supabase.from('registro_tratamientos').insert({
-        'cod_olivo': oliveId,
+      final List<Map<String, dynamic>> inserts = oliveIds.map((id) => {
+        'cod_olivo': id,
         'producto': product,
         'dosis': dose,
         'fecha_tratamiento': date.toIso8601String(),
-      });
+      }).toList();
+
+      await _supabase.from('registro_tratamientos').insert(inserts);
     } catch (e) {
       rethrow;
     }
   }
 
-  /// Registra una nueva observación para un olivo.
-  ///
-  /// Invocada por: RegisterActionScreen.
+  /// Registra una nueva observación para uno o varios olivos.
   Future<void> addObservation({
-    required int oliveId,
+    required List<int> oliveIds,
     required String type,
     required String status,
     required String description,
     required DateTime date,
   }) async {
     try {
-      await _supabase.from('registro_observaciones').insert({
-        'cod_olivo': oliveId,
+      final List<Map<String, dynamic>> inserts = oliveIds.map((id) => {
+        'cod_olivo': id,
         'tipo_observacion': type,
         'estado': status,
         'descripcion': description,
         'fecha_observacion': date.toIso8601String(),
-      });
+      }).toList();
+
+      await _supabase.from('registro_observaciones').insert(inserts);
     } catch (e) {
       rethrow;
     }

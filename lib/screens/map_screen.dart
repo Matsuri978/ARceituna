@@ -6,6 +6,7 @@ import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:arceituna/services/services.dart';
 import 'package:arceituna/models/models.dart';
 import 'package:arceituna/utils/utils.dart';
+import 'package:arceituna/screens/screens.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -143,6 +144,27 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
           ),
+          if (DatabaseService.instance.currentEnclosure != null &&
+              DatabaseService.instance.olives.isNotEmpty &&
+              AuthService.instance.currentRole.canRegisterTreatments)
+            FloatingActionButton(
+              heroTag: "btn_batch_action",
+              onPressed: () {
+                _fabKey.currentState?.toggle();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RegisterActionScreen(
+                      olives: DatabaseService.instance.olives,
+                      role: AuthService.instance.currentRole,
+                    ),
+                  ),
+                );
+              },
+              backgroundColor: Colors.orange.shade800,
+              foregroundColor: Colors.white,
+              child: const Icon(Icons.dynamic_feed, size: 30),
+            ),
         ],
       ),
     );
