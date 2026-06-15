@@ -31,9 +31,7 @@ class LocationService extends ChangeNotifier {
   StreamSubscription<CompassEvent>? _compassSubscription;
 
   // Filtros de Kalman para suavizar señales
-  final KalmanFilter _latFilter = KalmanFilter(processNoise: 0.000001); // Ruido muy bajo para coords
-  final KalmanFilter _lngFilter = KalmanFilter(processNoise: 0.000001);
-  final KalmanFilter _headingFilter = KalmanFilter(processNoise: 0.1);
+  final KalmanFilter _headingFilter = KalmanFilter(processNoise: 0.1); 
 
   // Variables para el cálculo dinámico de R en la brújula
   final List<double> _compassHistory = [];
@@ -98,9 +96,10 @@ class LocationService extends ChangeNotifier {
         _currentPlace = null;
       }
 
+
       _currentPosition = Position(
-        latitude: _latFilter.filter(position.latitude, customR: position.accuracy / 111320), // Convierte metros a grados aprox.
-        longitude: _lngFilter.filter(position.longitude, customR: position.accuracy / 111320),
+        latitude: position.latitude,
+        longitude: position.longitude,
         timestamp: position.timestamp,
         accuracy: position.accuracy,
         altitude: position.altitude,

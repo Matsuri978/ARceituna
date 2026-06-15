@@ -15,27 +15,7 @@ class KalmanFilter {
       : _q = processNoise,
         _r = measurementNoise;
 
-  /// Procesa una nueva medida y devuelve el valor suavizado.
-  /// [customR] permite pasar un ruido de medida dinámico (ej. la precisión del GPS).
-  double filter(double measurement, {double? customR}) {
-    if (!_isInitialized) {
-      _x = measurement;
-      _isInitialized = true;
-      return _x;
-    }
 
-    double rToUse = customR ?? _r;
-
-    // 1. Predicción
-    _p = _p + _q;
-
-    // 2. Actualización (Corrección)
-    _k = _p / (_p + rToUse);
-    _x = _x + _k * (measurement - _x);
-    _p = (1 - _k) * _p;
-
-    return _x;
-  }
 
   /// Versión especializada para ángulos (0-360º) que maneja el salto del Norte.
   /// [customR] permite pasar un ruido de medida dinámico.
