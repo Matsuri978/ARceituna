@@ -144,3 +144,31 @@ List<Coordinate> douglasPeucker(List<Coordinate> points, double epsilon) {
     return [points[0], points.last];
   }
 }
+
+/// Calcula el área de un polígono en metros cuadrados.
+/// Utiliza la fórmula de Shoelace (cordón de zapato) proyectada.
+double calculatePolygonArea(List<Coordinate> polygon) {
+  if (polygon.length < 3) return 0.0;
+
+  double area = 0.0;
+  const double R = 6371000; // Radio de la Tierra en metros
+
+  for (int i = 0; i < polygon.length; i++) {
+    int j = (i + 1) % polygon.length;
+
+    double latI = polygon[i].latitude * pi / 180;
+    double lonI = polygon[i].longitude * pi / 180;
+    double latJ = polygon[j].latitude * pi / 180;
+    double lonJ = polygon[j].longitude * pi / 180;
+
+    // Proyección simple equidistante para áreas pequeñas
+    double xi = lonI * R * cos(latI);
+    double yi = latI * R;
+    double xj = lonJ * R * cos(latJ);
+    double yj = latJ * R;
+
+    area += (xi * yj) - (xj * yi);
+  }
+
+  return area.abs() / 2.0;
+}

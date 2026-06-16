@@ -16,6 +16,9 @@ class Enclosure {
   late final Coordinate minBounds;
   late final Coordinate maxBounds;
 
+  /// Referencia legible combinando polígono y recinto.
+  String get fullRef => "Pol: $polygonNumber, Rec: $enclosureNumber";
+
   Enclosure({
     required this.id,
     required this.cadastralRef,

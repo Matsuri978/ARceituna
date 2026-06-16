@@ -208,6 +208,15 @@ enum OliveVariety {
   const OliveVariety(this.label);
 
   static List<String> get labels => values.map((e) => e.label).toList();
+
+  static OliveVariety? fromLabel(String? label) {
+    if (label == null) return null;
+    try {
+      return values.firstWhere((e) => e.label.toLowerCase() == label.toLowerCase());
+    } catch (_) {
+      return null;
+    }
+  }
 }
 
 /// Estados posibles de un olivo.
