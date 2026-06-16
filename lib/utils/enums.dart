@@ -270,3 +270,12 @@ const Map<int, String> monthNames = {
   11: 'Nov',
   12: 'Dic'
 };
+
+/// Estados de disponibilidad y permisos de la cámara para Realidad Aumentada.
+enum ARStatus {
+  initializing,
+  unsupported,
+  permissionDenied,
+  cameraDisabled,
+  ready
+}

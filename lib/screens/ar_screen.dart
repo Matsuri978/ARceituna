@@ -4,6 +4,7 @@ import 'package:ar_flutter_plugin_2/datatypes/config_planedetection.dart';
 import 'package:ar_flutter_plugin_2/managers/ar_location_manager.dart';
 import 'package:ar_flutter_plugin_2/managers/ar_session_manager.dart';
 import 'package:ar_flutter_plugin_2/managers/ar_object_manager.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'package:arceituna/services/services.dart';
 import 'package:arceituna/models/models.dart';
@@ -20,16 +21,60 @@ class _ARScreenState extends State<ARScreen> {
   ARSessionManager? arSessionManager;
   ARObjectManager? arObjectManager;
 
+  ARStatus _status = ARStatus.initializing;
+  String _errorMessage = "";
+
   bool showInfoCard = false;
   bool planeFound = false;
 
   Olive? _selectedOlive;
-  
+
   @override
   void initState() {
     super.initState();
-    LocationService.instance.startTracking();
-    LocationService.instance.addListener(_checkScanning);
+    _checkARAvailability();
+  }
+
+  /// Verifica permisos y compatibilidad de hardware antes de iniciar la vista AR.
+  Future<void> _checkARAvailability() async {
+    setState(() => _status = ARStatus.initializing);
+
+    try {
+      // 1. Comprobar permisos de cámara
+      var status = await Permission.camera.status;
+      if (status.isDenied) {
+        status = await Permission.camera.request();
+      }
+
+      if (status.isPermanentlyDenied) {
+        setState(() {
+          _status = ARStatus.permissionDenied;
+          _errorMessage = "El acceso a la cámara está bloqueado en los ajustes.";
+        });
+        return;
+      }
+
+      if (!status.isGranted) {
+        setState(() {
+          _status = ARStatus.permissionDenied;
+          _errorMessage = "Se requiere permiso de cámara para usar la Realidad Aumentada.";
+        });
+        return;
+      }
+
+      // 2. Iniciar servicios de ubicación (necesarios para el escaneo)
+      LocationService.instance.startTracking();
+      LocationService.instance.addListener(_checkScanning);
+
+      // 3. Esta correcto
+      setState(() => _status = ARStatus.ready);
+      
+    } catch (e) {
+      setState(() {
+        _status = ARStatus.cameraDisabled;
+        _errorMessage = "Error al acceder al hardware de la cámara.";
+      });
+    }
   }
 
   @override
@@ -42,7 +87,7 @@ class _ARScreenState extends State<ARScreen> {
   /// Escanea constantemente la posición y orientación para detectar olivos cercanos.
   /// Independiente de la detección de planos de ARCore/ARKit.
   void _checkScanning() {
-    if (showInfoCard || planeFound) return;
+    if (showInfoCard || planeFound || _status != ARStatus.ready) return;
 
     final pos = LocationService.instance.currentPosition;
     final heading = LocationService.instance.currentHeading;
@@ -78,23 +123,47 @@ class _ARScreenState extends State<ARScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          ARView(
-            onARViewCreated: onARViewCreated,
-            planeDetectionConfig: PlaneDetectionConfig.horizontalAndVertical,
-          ),
-          viewCard(),
-        ],
-      ),
+      backgroundColor: Colors.black,
+      body: _buildBody(),
     );
   }
 
-  /// Callback que se ejecuta cuando la vista AR se ha creado correctamente.
-  ///
-  /// Inicializa los managers de sesión y objetos.
-  ///
-  /// Invocada por: Widget ARView.
+  Widget _buildBody() {
+    switch (_status) {
+      case ARStatus.initializing:
+        return const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Colors.green),
+              SizedBox(height: 16),
+              Text("Inicializando cámara...", style: TextStyle(color: Colors.white)),
+            ],
+          ),
+        );
+
+      case ARStatus.permissionDenied:
+      case ARStatus.cameraDisabled:
+      case ARStatus.unsupported:
+        return ARErrorView(
+          status: _status,
+          errorMessage: _errorMessage,
+          onRetry: _checkARAvailability,
+        );
+
+      case ARStatus.ready:
+        return Stack(
+          children: [
+            ARView(
+              onARViewCreated: onARViewCreated,
+              planeDetectionConfig: PlaneDetectionConfig.horizontalAndVertical,
+            ),
+            viewCard(),
+          ],
+        );
+    }
+  }
+
   void onARViewCreated(
     ARSessionManager sessionManager,
     ARObjectManager objectManager,
@@ -113,9 +182,6 @@ class _ARScreenState extends State<ARScreen> {
     );
 
     arObjectManager!.onInitialize();
-
-    // La lógica de detección se ha movido a _checkScanning para que funcione 
-    // independientemente de si se detectan superficies físicas (planos).
     arSessionManager!.onPlaneDetected = (plane) {};
   }
 

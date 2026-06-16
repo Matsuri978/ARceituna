@@ -38,6 +38,7 @@ dependencies:
   cupertino_icons: ^1.0.8 # Iconos de estilo iOS
   ar_flutter_plugin_2: ^0.0.3 # Realidad Aumentada
   geolocator: ^12.0.0 # Servicios de ubicación GPS
+  permission_handler: ^11.3.1 # Gestión de permisos de hardware
   geocoding: ^4.0.0 # Conversión de coordenadas a direcciones y viceversa
   flutter_compass: ^0.8.0 # Acceso al magnetómetro (brújula)
   supabase_flutter: ^2.12.2 # Base de datos y autenticación

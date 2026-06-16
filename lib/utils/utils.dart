@@ -6,3 +6,4 @@ export 'ui/ui_helpers.dart';
 export 'ui/olive_info_card.dart';
 export 'ui/base_map_view.dart';
 export 'ui/enclosure_summary_modal.dart';
+export 'ui/ar_error_view.dart';
