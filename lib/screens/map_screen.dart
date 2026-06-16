@@ -118,6 +118,20 @@ class _MapScreenState extends State<MapScreen> {
         ),
         children: [
           FloatingActionButton(
+            heroTag: "btn_summary",
+            onPressed: () {
+              _fabKey.currentState?.toggle();
+              showEnclosureSummary(
+                context,
+                DatabaseService.instance.olives,
+                DatabaseService.instance.currentEnclosure,
+              );
+            },
+            backgroundColor: Colors.green.shade700,
+            foregroundColor: Colors.white,
+            child: const Icon(Icons.bar_chart, size: 30),
+          ),
+          FloatingActionButton(
             heroTag: "btn_focus",
             onPressed: () {
               _focusOnCurrentLocation();
