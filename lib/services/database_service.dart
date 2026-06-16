@@ -318,6 +318,37 @@ class DatabaseService extends ChangeNotifier {
     }
   }
 
+  /// Obtiene todos los tratamientos de un recinto específico.
+  Future<List<Map<String, dynamic>>> getTreatmentsByEnclosure(
+      String enclosureId) async {
+    try {
+      // Usamos inner join con la tabla olivos para filtrar por recinto
+      final response = await _supabase
+          .from('registro_tratamientos')
+          .select('*, olivos!inner(id_recinto_sigpac)')
+          .eq('olivos.id_recinto_sigpac', enclosureId)
+          .order('fecha_tratamiento', ascending: false);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Obtiene todas las observaciones de un recinto específico.
+  Future<List<Map<String, dynamic>>> getObservationsByEnclosure(
+      String enclosureId) async {
+    try {
+      final response = await _supabase
+          .from('registro_observaciones')
+          .select('*, olivos!inner(id_recinto_sigpac)')
+          .eq('olivos.id_recinto_sigpac', enclosureId)
+          .order('fecha_observacion', ascending: false);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      return [];
+    }
+  }
+
   /// Registra un nuevo tratamiento para uno o varios olivos.
   Future<void> addTreatment({
     required List<int> oliveIds,
