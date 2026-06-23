@@ -35,7 +35,7 @@ enum UserRole {
       this == admin;
   bool get canRegisterObservations => this == technician || this == admin;
   bool get canModifyOlives =>
-      this == technician || this == admin || this == fieldManager;
+      this == technician || this == admin;
   bool get canUseDevTools => this == admin;
 
   /// Roles disponibles para el registro de nuevos usuarios (excluye Guest por defecto).
