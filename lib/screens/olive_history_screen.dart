@@ -327,7 +327,7 @@ class _OliveHistoryScreenState extends State<OliveHistoryScreen> {
                             setState(() => _selectedObsType = val),
                         itemText: (val) => val,
                         showAllOption: true,
-                        allOptionLabel: "Todos (Tipo)",
+                        allOptionLabel: "Todos",
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -340,7 +340,7 @@ class _OliveHistoryScreenState extends State<OliveHistoryScreen> {
                             setState(() => _selectedObsStatus = val),
                         itemText: (val) => val,
                         showAllOption: true,
-                        allOptionLabel: "Todos (Estado)",
+                        allOptionLabel: "Todos"
                       ),
                     ),
                   ],
@@ -452,11 +452,12 @@ class _OliveHistoryScreenState extends State<OliveHistoryScreen> {
 
     return Row(
       children: [
+        // Año: Reducido el flex y el hint
         Expanded(
-          flex: 2,
+          flex: 1,
           child: Container(
             height: 40,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 6),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(10),
@@ -467,7 +468,7 @@ class _OliveHistoryScreenState extends State<OliveHistoryScreen> {
               keyboardType: TextInputType.number,
               style: const TextStyle(fontSize: 12),
               decoration: const InputDecoration(
-                hintText: "Año (Ej: 2024)",
+                hintText: "Año",
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.symmetric(vertical: 10),
@@ -484,9 +485,10 @@ class _OliveHistoryScreenState extends State<OliveHistoryScreen> {
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 5),
+        // Mes: Reducido un poco el flex
         Expanded(
-          flex: 2,
+          flex: 1,
           child: buildSimpleDropdown<int>(
             hint: "Mes",
             value: _selectedMonth,
@@ -496,7 +498,6 @@ class _OliveHistoryScreenState extends State<OliveHistoryScreen> {
               if (val == null) {
                 _selectedDay = null;
               } else {
-                // Ajustar día si se pasa del límite del nuevo mes
                 int max = getDaysInMonth(_selectedYear, val);
                 if (_selectedDay != null && _selectedDay! > max) {
                   _selectedDay = max;
@@ -507,7 +508,8 @@ class _OliveHistoryScreenState extends State<OliveHistoryScreen> {
             enabled: _selectedYear != null,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 5),
+        // Día: Mantenemos el espacio mínimo
         Expanded(
           flex: 1,
           child: buildSimpleDropdown<int>(
