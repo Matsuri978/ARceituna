@@ -60,9 +60,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Center(
               child: CircleAvatar(
                 radius: 50,
-                backgroundColor: Colors.grey.shade300,
-                child:
-                    Icon(Icons.person, size: 60, color: Colors.green.shade900),
+                backgroundColor: Colors.green.shade50,
+                child: Image.asset(
+                    'assets/arceituna.png',
+                    width: 200,
+                    height: 200,
+                    fit: BoxFit.contain,
+                ),
               ),
             ),
             const SizedBox(height: 20),
