@@ -43,16 +43,21 @@ class WelcomeScreen extends StatelessWidget {
             children: [
               const Spacer(),
 
-              // Aquí puedes poner tu logo real más adelante con Image.asset
+              // Logo de la aplicación
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.green.shade50,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.agriculture, size: 100, color: Colors.green.shade700),
+                child: Image.asset(
+                  'assets/arceituna.png',
+                  width: 200,
+                  height: 200,
+                  fit: BoxFit.contain,
+                ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 10),
 
               Text(
                 'Gestión Integral',
