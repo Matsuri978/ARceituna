@@ -149,11 +149,11 @@ class _MapScreenState extends State<MapScreen> {
             },
             backgroundColor: Colors.green.shade700,
             child: SvgPicture.asset(
-              'assets/olive.svg',
+              _showOlives ? 'assets/olive.svg' : 'assets/no_olive.svg',
               width: 30,
               height: 30,
               colorFilter: ColorFilter.mode(
-                _showOlives ? Colors.white : Colors.red,
+               Colors.white,
                 BlendMode.srcIn,
               ),
             ),
