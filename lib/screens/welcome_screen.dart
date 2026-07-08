@@ -60,8 +60,12 @@ class WelcomeScreen extends StatelessWidget {
               const SizedBox(height: 10),
 
               Text(
-                'Gestión Integral',
+                'ARCeituna',
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.green.shade900),
+              ),
+              Text(
+                'Gestión Integral',
+                style: TextStyle(fontSize: 24, color: Colors.grey),
               ),
               const Text(
                 'de Olivar con AR',
